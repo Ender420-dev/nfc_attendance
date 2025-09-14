@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance</title>
+    <link rel="stylesheet" href="../css/admin.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="../images/logo.png" />
+</head>
+<body class="dashboard-page">
+
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="../images/salon.jpg" alt="Company Logo" />
+  </div>
+  <nav>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="owner-dashboard.html" class="menu-link">
+        <i class="fa fa-home"></i>
+        Dashboard
+      </a>
+    </li>
+    <li>
+  <a href="owner-employee-management.html" class="menu-link">
+    <i class="fa-solid fa-users"></i>
+    Employee Management
+  </a>
+</li>
+<li>
+  <a href="owner-attendance.html" class="menu-link active">
+    <i class="fa-solid fa-calendar"></i>
+    Attendance
+  </a>
+</li>
+    <li>
+      <a href="owner-attendance-management.html" class="menu-link">
+        <i class="fa-solid fa-clipboard-list"></i>
+        Attendance Management
+      </a>
+    </li>
+    <li>
+      <a href="owner-payroll-management.html" class="menu-link">
+        <i class="fa-solid fa-money-bill"></i>
+        Payroll Management
+      </a>
+    </li>
+    <li>
+      <a href="../index.html" class="menu-link">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+      </a>
+    </li>
+  </ul>
+</nav>
+</aside>
+
+<main class="dashboard-content">
+  <header class="dashboard-header">
+    <button class="toggle-btn" id="toggleBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+      <div class="profile-icon" id="profileIcon">
+        <i class="fa-regular fa-circle-user"></i>
+      </div>
+    </div>
+  </header>
+
+<section class="main-section">
+  <div class="search-filter-container">
+    <input type="text" id="searchInput" class="search" placeholder="Search employees..." />
+    <div class="filter-dropdown">
+      <button id="filterBtn" class="filter-btn">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+      
+      <ul id="filterMenu" class="filter-menu">
+        <li id="resetFilters">Reset</li>
+        <li class="has-submenu">
+          Date ▸
+          <ul class="submenu">
+            <li><input type="date" id="dateFilter" class="submenu-input" /></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+<div class="clock" id="clock"></div>
+
+<div class="attendance-actions">
+  <button id="checkInBtn">Check In</button>
+  <button id="breakOutBtn">Break Out</button>
+  <button id="breakInBtn">Break In</button>
+  <button id="checkOutBtn">Check Out</button>
+</div>
+
+<!-- Attendance Confirmation Modal -->
+<div id="attendanceConfirmModal" class="modal">
+  <div class="modal-content">
+    <h3 id="attendanceModalTitle">Confirm Action</h3>
+    <p id="attendanceModalMessage">Are you sure you want to proceed?</p>
+    <div class="modal-buttons">
+      <button id="attendanceConfirmYes">Yes</button>
+      <button id="attendanceConfirmNo">No</button>
+    </div>
+  </div>
+</div>
+
+   <div class="table">
+  <h2>Attendance History</h2>
+  <table id="Table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Check In</th>
+        <th>Break time</th>
+        <th>Break In</th>
+        <th>Check Out</th>
+        <th>Status</th>
+        <th>Total Hours</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2025-08-20</td>
+        <td>08:00 AM</td>
+        <td>12:00 PM - 01:00 PM</td>
+        <td>01:00 PM</td>
+        <td>05:00 PM</td>
+        <td class="status green">Completed</td>
+        <td>08:00</td>
+      </tr>
+      <tr>
+        <td>2025-08-19</td>
+        <td>08:15 AM</td>
+        <td>12:15 PM - 01:15 PM</td>
+        <td>01:15 PM</td>
+        <td>05:15 PM</td>
+        <td class="status green">Completed</td>
+        <td>08:00</td>
+      </tr>
+      <tr>
+        <td>2025-08-18</td>
+        <td>08:05 AM</td>
+        <td>12:05 PM - 01:05 PM</td>
+        <td>01:05 PM</td>
+        <td>05:05 PM</td>
+        <td class="status green">Completed</td>
+        <td>08:00</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+    </section>
+  </main>
+<script>
+(function initClock() {
+  const clockEl = document.getElementById("clock");
+  function updateClock() {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString(undefined, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "2-digit"
+    });
+    const timeStr = now.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
+    if (clockEl) clockEl.textContent = `${dateStr} • ${timeStr}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+})();
+
+// ===========================
+// ELEMENTS
+// ===========================
+const btnCheckIn  = document.getElementById("checkInBtn");
+const btnBreakOut = document.getElementById("breakOutBtn");
+const btnBreakIn  = document.getElementById("breakInBtn");
+const btnCheckOut = document.getElementById("checkOutBtn");
+
+// Confirmation modal elements
+const attendanceModal       = document.getElementById("attendanceConfirmModal");
+const attendanceModalTitle  = document.getElementById("attendanceModalTitle");
+const attendanceModalMsg    = document.getElementById("attendanceModalMessage");
+const attendanceConfirmYes  = document.getElementById("attendanceConfirmYes");
+const attendanceConfirmNo   = document.getElementById("attendanceConfirmNo");
+
+// ===========================
+// MODAL FUNCTIONS
+// ===========================
+function openConfirm(label, cb) {
+  attendanceModalTitle.textContent = `Confirm ${label}`;
+  attendanceModalMsg.textContent   = `Are you sure you want to ${label}?`;
+  attendanceModal.style.display    = "block";
+
+  const onYes = () => { closeConfirm(); cb(); cleanup(); };
+  const onNo  = () => { closeConfirm(); cleanup(); };
+
+  function cleanup() {
+    attendanceConfirmYes.removeEventListener("click", onYes);
+    attendanceConfirmNo.removeEventListener("click", onNo);
+  }
+
+  attendanceConfirmYes.addEventListener("click", onYes);
+  attendanceConfirmNo.addEventListener("click", onNo);
+}
+
+function closeConfirm() {
+  attendanceModal.style.display = "none";
+}
+
+// Close modal if user clicks outside it
+window.addEventListener("click", (e) => {
+  if (e.target === attendanceModal) closeConfirm();
+});
+
+// ===========================
+// BUTTON LISTENERS
+// ===========================
+btnCheckIn.addEventListener("click", () => openConfirm("Check In", () => {
+  console.log("Check In confirmed");
+}));
+
+btnBreakOut.addEventListener("click", () => openConfirm("Break Out", () => {
+  console.log("Break Out confirmed");
+}));
+
+btnBreakIn.addEventListener("click", () => openConfirm("Break In", () => {
+  console.log("Break In confirmed");
+}));
+
+btnCheckOut.addEventListener("click", () => openConfirm("Check Out", () => {
+  console.log("Check Out confirmed");
+}));
+
+const searchInput = document.getElementById("searchInput");
+const filterBtn = document.getElementById("filterBtn");
+const filterMenu = document.getElementById("filterMenu");
+const dateFilter = document.getElementById("dateFilter");
+const table = document.querySelector(".table table");
+const tbody = table.querySelector("tbody");
+const rows = Array.from(tbody.getElementsByTagName("tr"));
+
+// Toggle filter menu
+filterBtn.addEventListener("click", () => {
+  filterMenu.style.display = filterMenu.style.display === "block" ? "none" : "block";
+});
+
+// Close menu if clicking outside
+document.addEventListener("click", (e) => {
+  if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+    filterMenu.style.display = "none";
+  }
+});
+
+// Filter function
+function filterTable() {
+  const searchValue = searchInput.value.toLowerCase();
+  const dateValue = dateFilter.value; // yyyy-mm-dd
+
+  rows.forEach(row => {
+    const nameCell = row.cells[0];   // Full Name
+    const dateCell = row.cells[2];   // Date
+    const statusCell = row.cells[3]; // Status
+
+    if (!nameCell || !dateCell || !statusCell) return;
+
+    const nameText = nameCell.textContent.toLowerCase();
+    const dateText = dateCell.textContent.trim(); // matches yyyy-mm-dd
+    const statusText = statusCell.textContent.trim().toLowerCase();
+
+    const matchesSearch = nameText.includes(searchValue) || statusText.includes(searchValue);
+    const matchesDate = !dateValue || dateText === dateValue;
+
+    row.style.display = matchesSearch && matchesDate ? "" : "none";
+  });
+}
+
+// Search and date input listeners
+searchInput.addEventListener("keyup", filterTable);
+dateFilter.addEventListener("change", filterTable);
+
+// Reset button
+document.getElementById("resetFilters").addEventListener("click", () => {
+  searchInput.value = "";
+  dateFilter.value = "";
+  rows.forEach(row => row.style.display = ""); // show all rows
+  filterMenu.style.display = "none";
+});
+
+</script>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

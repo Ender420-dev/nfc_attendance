@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Management</title>
+    <link rel="stylesheet" href="../css/admin.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="../images/logo.png" />
+</head>
+<body class="dashboard-page">
+
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="../images/salon.jpg" alt="Company Logo" />
+  </div>
+  <nav>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="owner-dashboard.html" class="menu-link">
+        <i class="fa fa-home"></i>
+        Dashboard
+      </a>
+    </li>
+    <li>
+  <a href="owner-employee-management.html" class="menu-link active">
+    <i class="fa-solid fa-users"></i>
+    Employee Management
+  </a>
+</li>
+<li>
+  <a href="owner-attendance.html" class="menu-link">
+    <i class="fa-solid fa-calendar"></i>
+    Attendance
+  </a>
+</li>
+    <li>
+      <a href="owner-attendance-management.html" class="menu-link">
+        <i class="fa-solid fa-clipboard-list"></i>
+        Attendance Management
+      </a>
+    </li>
+    <li>
+      <a href="owner-payroll-management.html" class="menu-link">
+        <i class="fa-solid fa-money-bill"></i>
+        Payroll Management
+      </a>
+    </li>
+    <li>
+      <a href="../index.html" class="menu-link">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+      </a>
+    </li>
+  </ul>
+</nav>
+</aside>
+
+<main class="dashboard-content">
+  <header class="dashboard-header">
+    <button class="toggle-btn" id="toggleBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+      <div class="profile-icon" id="profileIcon">
+        <i class="fa-regular fa-circle-user"></i>
+      </div>
+    </div>
+  </header>
+
+<section class="main-section">
+  <div class="search-filter-container">
+    <input type="text" id="searchInput" class="search" placeholder="Search employees..." />
+    <div class="filter-dropdown">
+      <button id="filterBtn" class="filter-btn">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+      <ul id="filterMenu" class="filter-menu">
+         <li id="resetFilters">Reset</li>
+        <li id="sortAZ">A-Z</li>
+        <li class="has-submenu">
+          Status ▸
+          <ul class="submenu">
+            <li data-value="all">All</li>
+            <li data-value="present">Present</li>
+            <li data-value="absent">Absent</li>
+            <li data-value="late">Late</li>
+            <li data-value="leave">On Leave</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+    <div class="table">
+      <h2>Employee Attendance Records</h2>
+      <table id="Table">
+        <thead>
+          <tr>
+            <th>Full Name</th>
+            <th>Time</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+          <tr>
+            <td>Jane Dela Cruz</td>
+            <td>08:00</td>
+            <td>2025-07-31</td>
+            <td class="status green">Present</td>
+            <td>
+              <button class="view" onclick="openViewModal(this)">View</button>
+              <button class="edit" onclick="openEditModal(this)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Maria Santos</td>
+            <td>—</td>
+            <td>2025-07-30</td>
+            <td class="status red">Absent</td>
+            <td>
+              <button class="view" onclick="openViewModal(this)">View</button>
+              <button class="edit" onclick="openEditModal(this)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Mark Reyes</td>
+            <td>09:00</td>
+            <td>2025-07-28</td>
+            <td class="status blue">On Leave</td>
+            <td>
+              <button class="view" onclick="openViewModal(this)">View</button>
+              <button class="edit" onclick="openEditModal(this)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Liza Ramirez</td>
+            <td>08:00</td>
+            <td>2025-07-29</td>
+            <td class="status green">Present</td>
+            <td>
+              <button class="view" onclick="openViewModal(this)">View</button>
+              <button class="edit" onclick="openEditModal(this)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+            </td>
+          </tr>
+          <tr>
+            <td>John Santos</td>
+            <td>08:15</td>
+            <td>2025-07-27</td>
+            <td class="status yellow">Late</td>
+            <td>
+              <button class="view" onclick="openViewModal(this)">View</button>
+              <button class="edit" onclick="openEditModal(this)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+<div class="export-buttons">
+  <button id="exportCSV" class="add">Export CSV</button>
+  <button id="exportExcel" class="add">Export Excel</button>
+  <button id="exportPDF" class="add">Export PDF</button>
+</div>
+    </section>
+  </main>
+<!-- VIEW MODAL -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal('viewModal')">&times;</span>
+    <h2>Employee Attendance History</h2>
+    <p><strong>Full Name:</strong> <span id="viewName"></span></p>
+    <div class="table">
+      <table id="viewHistoryTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
+    <h2>Edit Attendance</h2>
+    <label>Full Name</label>
+    <input type="text" id="editName" disabled>
+    <label>Date</label>
+    <input type="date" id="editDate">
+    <label>Time</label>
+    <input type="time" id="editTime">
+    <label>Status</label>
+    <select id="editStatus">
+      <option value="Present">Present</option>
+      <option value="Absent">Absent</option>
+      <option value="On Leave">On Leave</option>
+      <option value="Late">Late</option>
+    </select>
+    <button class="save-btn" onclick="saveEdit()">Save</button>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal">
+  <div class="modal-content">
+    <h2>Confirm Deletion</h2>
+    <p>Are you sure you want to remove <span id="deleteName"></span>?</p>
+    <div class="delete-modal-buttons">
+      <button class="cancel-btn" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="confirm-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Sample attendance data
+  let attendanceData = [
+    {name:"Jane Dela Cruz", date:"2025-07-31", time:"08:00", status:"Present"},
+    {name:"Jane Dela Cruz", date:"2025-07-30", time:"08:05", status:"Late"},
+    {name:"Maria Santos", date:"2025-07-30", time:"—", status:"Absent"},
+    {name:"Mark Reyes", date:"2025-07-28", time:"09:00", status:"On Leave"},
+    {name:"Liza Ramirez", date:"2025-07-29", time:"08:00", status:"Present"},
+    {name:"John Santos", date:"2025-07-27", time:"08:15", status:"Late"},
+  ];
+
+  let selectedRow = null; // currently selected table row
+
+  // --------------------
+  // VIEW MODAL
+  // --------------------
+  function openViewModal(btn) {
+    selectedRow = btn.closest('tr');
+    const fullName = selectedRow.cells[0].textContent;
+    document.getElementById('viewName').textContent = fullName;
+
+    const tbody = document.getElementById('viewHistoryTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    // Loop through attendanceData to get full history for this employee
+    attendanceData.filter(entry => entry.name === fullName)
+      .forEach(entry => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${entry.date}</td>
+          <td>${entry.time}</td>
+          <td class="status ${statusColorClass(entry.status)}">${entry.status}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    document.getElementById('viewModal').style.display = 'block';
+  }
+
+  // --------------------
+  // EDIT MODAL
+  // --------------------
+  function openEditModal(btn) {
+    selectedRow = btn.closest('tr');
+    const fullName = selectedRow.cells[0].textContent;
+    const rowDate = selectedRow.cells[2].textContent;
+    const rowTime = selectedRow.cells[1].textContent;
+    const rowStatus = selectedRow.cells[3].textContent;
+
+    document.getElementById('editName').value = fullName;
+    document.getElementById('editDate').value = rowDate;
+    document.getElementById('editTime').value = rowTime === '—' ? '' : rowTime;
+    document.getElementById('editStatus').value = rowStatus;
+
+    document.getElementById('editModal').style.display = 'block';
+  }
+
+  function saveEdit() {
+    const fullName = document.getElementById('editName').value;
+    const date = document.getElementById('editDate').value;
+    const time = document.getElementById('editTime').value || '—';
+    const status = document.getElementById('editStatus').value;
+
+    // Update table row
+    selectedRow.cells[1].textContent = time;
+    selectedRow.cells[2].textContent = date;
+    selectedRow.cells[3].textContent = status;
+    selectedRow.cells[3].className = `status ${statusColorClass(status)}`;
+
+    // Update attendanceData
+    const record = attendanceData.find(entry => 
+      entry.name === fullName && entry.date === selectedRow.cells[2].textContent
+    );
+    if (record) {
+      record.time = time;
+      record.status = status;
+    } else {
+      attendanceData.push({name: fullName, date, time, status});
+    }
+
+    closeModal('editModal');
+  }
+
+  // --------------------
+  // DELETE MODAL
+  // --------------------
+  function openDeleteModal(btn) {
+    selectedRow = btn.closest('tr');
+    document.getElementById('deleteName').textContent = selectedRow.cells[0].textContent;
+    document.getElementById('deleteModal').style.display = 'block';
+  }
+
+  function confirmDelete() {
+    if (!selectedRow) return;
+    const fullName = selectedRow.cells[0].textContent;
+    const rowDate = selectedRow.cells[2].textContent;
+
+    // Remove from attendanceData
+    attendanceData = attendanceData.filter(entry => !(entry.name === fullName && entry.date === rowDate));
+
+    // Remove table row
+    selectedRow.remove();
+    closeModal('deleteModal');
+  }
+
+  // --------------------
+  // COMMON
+  // --------------------
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function statusColorClass(status) {
+    switch(status) {
+      case 'Present': return 'green';
+      case 'Absent': return 'red';
+      case 'On Leave': return 'blue';
+      case 'Late': return 'yellow';
+      default: return '';
+    }
+  }
+
+  // Close modal if clicked outside
+  window.addEventListener('click', e => {
+    ['viewModal','editModal','deleteModal'].forEach(id => {
+      if (e.target === document.getElementById(id)) closeModal(id);
+    });
+  });
+
+const searchInput = document.getElementById("searchInput"); 
+const filterBtn = document.getElementById("filterBtn");
+const filterMenu = document.getElementById("filterMenu");
+const table = document.querySelector("#attendanceTable") || document.querySelector("table");
+const tbody = table.querySelector("tbody");
+const rows = Array.from(tbody.querySelectorAll("tr")); // convert NodeList to Array
+
+let selectedFilter = "all";
+
+// Store original row order
+const originalRows = rows.map(row => row.cloneNode(true));
+
+// Toggle filter menu
+filterBtn.addEventListener("click", () => {
+  filterMenu.style.display = filterMenu.style.display === "block" ? "none" : "block";
+});
+
+// Close filter menu when clicking outside
+document.addEventListener("click", (e) => {
+  if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+    filterMenu.style.display = "none";
+  }
+});
+
+// Status filter selection
+document.querySelectorAll(".submenu li[data-value]").forEach(item => {
+  item.addEventListener("click", () => {
+    selectedFilter = item.getAttribute("data-value").toLowerCase();
+    filterMenu.style.display = "none";
+    filterTable();
+  });
+});
+
+// Reset button
+document.getElementById("resetFilters").addEventListener("click", () => {
+  searchInput.value = "";
+  selectedFilter = "all";
+
+  // Restore original order and all rows
+  tbody.innerHTML = "";
+  originalRows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+
+  // Update rows reference
+  rows.length = 0;
+  rows.push(...tbody.querySelectorAll("tr"));
+});
+
+// Sort A-Z button
+document.getElementById("sortAZ").addEventListener("click", () => {
+  Array.from(tbody.rows)
+    .sort((a, b) => a.cells[0].textContent.localeCompare(b.cells[0].textContent))
+    .forEach(row => tbody.appendChild(row));
+});
+
+// Filter function
+function filterTable() {
+  const searchValue = searchInput.value.toLowerCase();
+  Array.from(tbody.rows).forEach(row => {
+    const nameCell = row.cells[0];    // Full Name
+    const statusCell = row.cells[3];  // Status column
+
+    if (nameCell && statusCell) {
+      const nameText = nameCell.textContent.toLowerCase();
+      const statusText = statusCell.textContent.toLowerCase();
+
+      const matchesSearch = nameText.includes(searchValue);
+      const matchesFilter = selectedFilter === "all" || statusText === selectedFilter;
+
+      row.style.display = matchesSearch && matchesFilter ? "" : "none";
+    }
+  });
+}
+
+// Search input
+searchInput.addEventListener("keyup", filterTable);
+
+</script>
+
+<script src="../js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>

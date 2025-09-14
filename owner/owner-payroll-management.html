@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payroll Management</title>
+    <link rel="stylesheet" href="../css/admin.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="../images/logo.png" />
+</head>
+<body class="dashboard-page">
+
+  <aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="../images/salon.jpg" alt="Company Logo" />
+  </div>
+  <nav>
+  <ul class="sidebar-menu">
+    <li>
+      <a href="owner-dashboard.html" class="menu-link">
+        <i class="fa fa-home"></i>
+        Dashboard
+      </a>
+    </li>
+    <li>
+  <a href="owner-employee-management.html" class="menu-link">
+    <i class="fa-solid fa-users"></i>
+    Employee Management
+  </a>
+</li>
+<li>
+  <a href="owner-attendance.html" class="menu-link">
+    <i class="fa-solid fa-calendar"></i>
+    Attendance
+  </a>
+</li>
+    <li>
+      <a href="owner-attendance-management.html" class="menu-link">
+        <i class="fa-solid fa-clipboard-list"></i>
+        Attendance Management
+      </a>
+    </li>
+    <li>
+      <a href="owner-payroll-management.html" class="menu-link active">
+        <i class="fa-solid fa-money-bill"></i>
+        Payroll Management
+      </a>
+    </li>
+    <li>
+      <a href="../index.html" class="menu-link">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        Logout
+      </a>
+    </li>
+  </ul>
+</nav>
+</aside>
+
+<main class="dashboard-content">
+  <header class="dashboard-header">
+    <button class="toggle-btn" id="toggleBtn">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+      <div class="profile-icon" id="profileIcon">
+        <i class="fa-regular fa-circle-user"></i>
+      </div>
+    </div>
+  </header>
+
+<section class="main-section">
+  <div class="search-filter-container">
+    <input type="text" id="searchInput" class="search" placeholder="Search employees..." />
+    <div class="filter-dropdown">
+      <button id="filterBtn" class="filter-btn">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+        <ul id="filterMenu" class="filter-menu"> 
+          <li id="resetFilters">Reset</li> 
+          <li id="sortAZ">A-Z</li>
+      </div>
+    </div>
+
+  </div>
+    <div class="table">
+      <h2>Payroll</h2>
+      <table id="Table">
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+<tbody>
+  <tr>
+    <td>Juan Dela Cruz</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+  <tr>
+    <td>Clarissa Reyes</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+  <tr>
+    <td>Maria Santos</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+  <tr>
+    <td>Mark Reyes</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+  <tr>
+    <td>Liza Ramirez</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+  <tr>
+    <td>John Santos</td>
+    <td>
+      <button class="view" onclick="openViewModal(this)">View</button>
+      <button class="edit" onclick="openEditModal(this)">Edit</button>
+      <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+    </td>
+  </tr>
+</tbody>
+
+        </table>
+      </div>
+    </section>
+  </main>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput"); 
+  const filterBtn = document.getElementById("filterBtn");
+  const filterMenu = document.getElementById("filterMenu");
+  const table = document.querySelector("#attendanceTable") || document.querySelector("table");
+  const tbody = table.querySelector("tbody");
+  let rows = Array.from(tbody.querySelectorAll("tr")); // Convert NodeList to Array
+
+  let selectedFilter = "all";
+
+  // Store original row order for reset
+  const originalRows = rows.map(row => row.cloneNode(true));
+
+  // Toggle filter menu
+  filterBtn.addEventListener("click", () => {
+    filterMenu.style.display = filterMenu.style.display === "block" ? "none" : "block";
+  });
+
+  // Close filter menu when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!filterBtn.contains(e.target) && !filterMenu.contains(e.target)) {
+      filterMenu.style.display = "none";
+    }
+  });
+
+  // Status filter selection
+  document.querySelectorAll(".submenu li[data-value]").forEach(item => {
+    item.addEventListener("click", () => {
+      selectedFilter = item.getAttribute("data-value").toLowerCase();
+      filterMenu.style.display = "none";
+      filterTable();
+    });
+  });
+
+  // Reset button
+  document.getElementById("resetFilters").addEventListener("click", () => {
+    searchInput.value = "";
+    selectedFilter = "all";
+
+    // Restore original rows
+    tbody.innerHTML = "";
+    originalRows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+
+    // Update rows reference
+    rows = Array.from(tbody.querySelectorAll("tr"));
+  });
+
+  // Sort A-Z button
+  document.getElementById("sortAZ").addEventListener("click", () => {
+    Array.from(tbody.rows)
+      .sort((a, b) => a.cells[0].textContent.localeCompare(b.cells[0].textContent))
+      .forEach(row => tbody.appendChild(row));
+  });
+
+  // Filter function
+  function filterTable() {
+    const searchValue = searchInput.value.toLowerCase();
+    Array.from(tbody.rows).forEach(row => {
+      const nameCell = row.cells[0];    // Full Name
+      const statusCell = row.cells[3];  // Status column
+
+      if (nameCell && statusCell) {
+        const nameText = nameCell.textContent.toLowerCase();
+        const statusText = statusCell.textContent.toLowerCase();
+
+        const matchesSearch = nameText.includes(searchValue);
+        const matchesFilter = selectedFilter === "all" || statusText === selectedFilter;
+
+        row.style.display = matchesSearch && matchesFilter ? "" : "none";
+      }
+    });
+  }
+
+  // Listen for search input
+  searchInput.addEventListener("keyup", filterTable);
+});
+
+  </script>
+  <script src="../js/main.js"></script>
+</body>
+</html>
