@@ -3,56 +3,40 @@ session_start();
 include '../db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $firstName   = $_POST['FirstName'];
+    $lastName    = $_POST['LastName'];
+    $position    = $_POST['Position'];
+    $contactInfo = $_POST['ContactInfo'];
+    $status      = $_POST['Status'];
+    $dateHired   = $_POST['DateHired'];
+    $nfcCardID   = $_POST['NfcCardID'] ?: NULL; // optional card
 
-    $firstName = $conn->real_escape_string($_POST['FirstName'] ?? '');
-    $lastName = $conn->real_escape_string($_POST['LastName'] ?? '');
-    $position = $conn->real_escape_string($_POST['Position'] ?? '');
-    $contactInfo = $conn->real_escape_string($_POST['ContactInfo'] ?? '');
-    $status = $conn->real_escape_string($_POST['Status'] ?? 'Active');
-    $dateHired = $conn->real_escape_string($_POST['DateHired'] ?? '');
-    $nfcCardID = $_POST['NfcCardID'] ?? null; // raw value
+    $username    = $_POST['Username'];
+    $password    = $_POST['Password']; // ⚠️ plain text
+    $role        = $_POST['Role'];
 
-    if (empty($firstName) || empty($lastName) || empty($position) || empty($dateHired)) {
-        $_SESSION['error'] = "Please fill in all required fields.";
-        header("Location: employee-management.php");
-        exit;
-    }
+    // Insert into employees table
+    $stmtEmp = $conn->prepare("
+        INSERT INTO employees (FirstName, LastName, Position, ContactInfo, Status, DateHired, NfcCardID) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    $stmtEmp->bind_param("sssssss", $firstName, $lastName, $position, $contactInfo, $status, $dateHired, $nfcCardID);
+    $stmtEmp->execute();
 
-    // Check if NFC Card exists in nfc_card table
-    if (!empty($nfcCardID)) {
-        $checkSql = "SELECT * FROM nfc_card WHERE NfcCardID = ?";
-        $checkStmt = $conn->prepare($checkSql);
-        $checkStmt->bind_param("s", $nfcCardID);
-        $checkStmt->execute();
-        $checkResult = $checkStmt->get_result();
-        if ($checkResult->num_rows === 0) {
-            $_SESSION['error'] = "The NFC Card ID does not exist in the system.";
-            $checkStmt->close();
-            header("Location: employee-management.php");
-            exit;
-        }
-        $checkStmt->close();
-    } else {
-        $nfcCardID = NULL; // allows NULL for foreign key
-    }
+    // Get EmployeeID
+    $employeeID = $conn->insert_id;
 
-    $sql = "INSERT INTO employees (NfcCardID, FirstName, LastName, Position, ContactInfo, Status, DateHired) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // Insert login info into users table
+    $stmtUser = $conn->prepare("
+        INSERT INTO users (EmployeeID, Username, Password, Role) 
+        VALUES (?, ?, ?, ?)
+    ");
+    $stmtUser->bind_param("isss", $employeeID, $username, $password, $role);
+    $stmtUser->execute();
 
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssss", $nfcCardID, $firstName, $lastName, $position, $contactInfo, $status, $dateHired);
+    $stmtEmp->close();
+    $stmtUser->close();
 
-    if ($stmt->execute()) {
-        $_SESSION['success'] = "Employee added successfully.";
-    } else {
-        $_SESSION['error'] = "Error adding employee: " . $stmt->error;
-    }
-
-    $stmt->close();
-    $conn->close();
-    header("Location: employee-management.php");
-    exit;
-} else {
     header("Location: employee-management.php");
     exit;
 }

@@ -19,6 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $emp = $empRes->fetch_assoc();
 
+    // Compute WorkDate
+    $workDate = date("Y-m-d", strtotime($scanTime));
+
     // Late check only for Time IN
     $isLate = 0;
     if ($scanType == "IN") {
@@ -27,10 +30,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($scanDT > $shiftStart) $isLate = 1;
     }
 
-    // Insert attendance
-    $stmt = $conn->prepare("INSERT INTO attendance (EmployeeID, ScanType, IsLate, ScanTime, Remarks) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("iisds", $employeeId, $scanType, $isLate, $scanTime, $remarks);
-    
+    // Insert into attendance table
+    $stmt = $conn->prepare("INSERT INTO attendance (EmployeeID, WorkDate, ScanType, IsLate, ScanTime, Remarks) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ississ", $employeeId, $workDate, $scanType, $isLate, $scanTime, $remarks);
+
     if ($stmt->execute()) {
         echo json_encode([
             'success' => true,

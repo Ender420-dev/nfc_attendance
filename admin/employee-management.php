@@ -40,6 +40,68 @@ if ($result && $result->num_rows > 0) {
   <link rel="icon" type="image/png" href="../images/logo.png" />
 </head>
 <style>
+ /* Hide modals by default */
+.modal {
+  display: none;  /* hide */
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* dark overlay */
+  justify-content: center;
+  align-items: center;
+}
+
+/* When modal is active, show it */
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: #f44336;
+}
+
+/* Form labels and inputs */
+.modal-content label {
+  display: block;
+  margin: 10px 0 5px;
+  font-weight: 500;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
   /* Modal Actions Container */
   .modal-actions {
     display: flex;
@@ -87,65 +149,70 @@ if ($result && $result->num_rows > 0) {
   }
 </style>
 <style>
-/* Add New Card Button */
-.modal-actions button[type="button"] {
-  background-color: #2196F3; /* Blue */
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-left: 5px;
-}
+  /* Add New Card Button */
+  .modal-actions button[type="button"] {
+    background-color: #2196F3;
+    /* Blue */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: 5px;
+  }
 
-.modal-actions button[type="button"]:hover {
-  background-color: #1976d2; /* Darker blue on hover */
-}
+  .modal-actions button[type="button"]:hover {
+    background-color: #1976d2;
+    /* Darker blue on hover */
+  }
 
-/* Checkbox styling */
-#addCardForm input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: #4CAF50; /* Green accent */
-  margin-right: 5px;
-}
+  /* Checkbox styling */
+  #addCardForm input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #4CAF50;
+    /* Green accent */
+    margin-right: 5px;
+  }
 
-/* Label for checkbox */
-#addCardForm label {
-  font-weight: 500;
-  margin-right: 10px;
-}
+  /* Label for checkbox */
+  #addCardForm label {
+    font-weight: 500;
+    margin-right: 10px;
+  }
 
-/* Add some spacing in the Add NFC Card modal */
-#addCardModal .modal-content {
-  padding: 20px;
-}
+  /* Add some spacing in the Add NFC Card modal */
+  #addCardModal .modal-content {
+    padding: 20px;
+  }
 
-#addCardForm input[type="text"] {
-  width: 80%;
-  padding: 6px 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
+  #addCardForm input[type="text"] {
+    width: 80%;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
 
-/* Save Card Button */
-#addCardForm button {
-  background-color: #4CAF50; /* Green */
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+  /* Save Card Button */
+  #addCardForm button {
+    background-color: #4CAF50;
+    /* Green */
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
 
-#addCardForm button:hover {
-  background-color: #45a049; /* Darker green */
-}
+  #addCardForm button:hover {
+    background-color: #45a049;
+    /* Darker green */
+  }
 </style>
 
 <body class="dashboard-page">
@@ -182,8 +249,7 @@ if ($result && $result->num_rows > 0) {
         <a href="#addModal" class="add">+ Add Employee</a>
       </div>
 
-      <!-- Employee List -->
-      <!-- Employee List -->
+
       <!-- Employee List -->
       <div class="table">
         <h2>Employee List</h2>
@@ -215,16 +281,40 @@ if ($result && $result->num_rows > 0) {
                 <td><?= htmlspecialchars($emp['DateHired']) ?></td>
                 <td>
                   <button class="view" onclick="openViewModal(this)">View</button>
-                  <button class="edit" onclick="openEditModal(this)">Edit</button>
+                  <button class="edit" onclick="openEditModal(<?= $emp['EmployeeID'] ?>)">Edit</button>
+
+
                   <button class="delete" onclick="openDeleteModal(this)">Remove</button>
                 </td>
               </tr>
             </tbody>
 
             </tr>
-            <!-- View Employee Modal -->
-            <!-- View Employee Modal -->
-            <div id="viewModal" class="modal">
+            
+
+
+
+            <!-- Delete Confirmation Modal -->
+            <div id="deleteModal" class="modal">
+              <div class="modal-content">
+                <a href="#" class="close-btn" onclick="closeModal('deleteModal')">&times;</a>
+                <h2>Confirm Delete</h2>
+                <p>Are you sure you want to remove this employee?</p>
+                <form id="deleteForm" method="POST" action="employee-delete.php">
+                  <input type="hidden" name="EmployeeID" id="deleteEmployeeID" />
+                  <button type="submit" class="delete">Yes, Delete</button>
+                  <button type="button" style="color: black;" class="cancel" onclick="closeModal('deleteModal')">Cancel</button>
+                </form>
+              </div>
+            </div>
+
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+
+<!-- View Employee Modal -->
+<div id="viewModal" class="modal">
               <div class="modal-content">
                 <span class="close-btn" onclick="closeModal('viewModal')">&times;</span>
                 <h2 class="modal-title">Employee Details</h2>
@@ -276,86 +366,72 @@ if ($result && $result->num_rows > 0) {
             <!-- Edit Employee Modal -->
             <div id="editModal" class="modal">
               <div class="modal-content">
-                <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
-                <h2 class="modal-title">Edit Employee</h2>
+                <a href="#" class="close-btn" onclick="closeModal('editModal')">&times;</a>
+                <h2>Edit Employee</h2>
+                <form id="editForm" method="POST" action="employee-edit.php">
 
-                <form id="editEmployeeForm">
-                  <input type="hidden" id="editEmployeeID" name="EmployeeID">
+                  <!-- Hidden EmployeeID -->
+                  <input type="hidden" name="EmployeeID" id="editEmployeeID">
 
-                  <div class="form-grid">
-                    <div class="form-group">
-                      <label for="editNfcCardID">Card UID</label>
-                      <input type="text" id="editNfcCardID" name="NfcCardID" placeholder="Enter NFC Card ID" required>
-                    </div>
+                  <label>First Name:</label>
+                  <input type="text" name="FirstName" id="editFirstName" required />
 
-                    <div class="form-group">
-                      <label for="editPositionID">Position ID</label>
-                      <input type="text" id="editPositionID" name="PositionID" placeholder="Enter Position ID">
-                    </div>
+                  <label>Last Name:</label>
+                  <input type="text" name="LastName" id="editLastName" required />
 
-                    <div class="form-group">
-                      <label for="editFirstName">First Name</label>
-                      <input type="text" id="editFirstName" name="FirstName" placeholder="Enter First Name" required>
-                    </div>
+                  <label>Position:</label>
+                  <input type="text" name="Position" id="editPosition" required />
 
-                    <div class="form-group">
-                      <label for="editLastName">Last Name</label>
-                      <input type="text" id="editLastName" name="LastName" placeholder="Enter Last Name" required>
-                    </div>
+                  <label>NFC Card:</label>
+                  <select name="NfcCardID" id="editNfcCardID">
+                    <option value="">No Card</option>
+                    <?php
+                    $cardsSql = "SELECT NfcCardID, CardUID FROM nfc_card WHERE IsActive = 1";
+                    $cardsResult = $conn->query($cardsSql);
+                    if ($cardsResult && $cardsResult->num_rows > 0) {
+                      while ($card = $cardsResult->fetch_assoc()) {
+                        echo '<option value="' . htmlspecialchars($card['NfcCardID']) . '">'
+                          . htmlspecialchars($card['CardUID']) . '</option>';
+                      }
+                    }
+                    ?>
+                  </select>
 
-                    <div class="form-group">
-                      <label for="editPosition">Position</label>
-                      <input type="text" id="editPosition" name="Position" placeholder="Enter Position">
-                    </div>
+                  <label>Status:</label>
+                  <select name="Status" id="editStatus" required>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
 
-                    <div class="form-group">
-                      <label for="editContactInfo">Contact Info</label>
-                      <input type="text" id="editContactInfo" name="ContactInfo" placeholder="Enter Contact Info">
-                    </div>
+                  <label>Contact Info:</label>
+                  <input type="text" name="ContactInfo" id="editContactInfo" />
 
-                    <div class="form-group">
-                      <label for="editStatus">Status</label>
-                      <select id="editStatus" name="Status">
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
-                    </div>
+                  <label>Date Hired:</label>
+                  <input type="date" name="DateHired" id="editDateHired" required />
 
-                    <div class="form-group">
-                      <label for="editDateHired">Date Hired</label>
-                      <input type="date" id="editDateHired" name="DateHired">
-                    </div>
-                  </div>
+                  <label>Username:</label>
+                  <input type="text" name="Username" id="editUsername" required />
+
+                  <label>Password:</label>
+                  <input type="text" name="Password" id="editPassword" required />
+
+                  <label>Role:</label>
+                  <select name="Role" id="editRole" required>
+                    <option value="Admin">Admin</option>
+                    <option value="Owner">Owner</option>
+                    <option value="Employee">Employee</option>
+                  </select>
 
                   <div class="modal-actions">
-                    <button type="submit" class="btn-save">Save Changes</button>
+                    <button type="submit" class="btn-save">💾 Update Employee</button>
                     <button type="button" class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+                    <div class="form-group">
+                      <button type="button" onclick="openAddCardModal()">+ Add New Card</button>
+                    </div>
                   </div>
                 </form>
               </div>
             </div>
-
-
-
-            <!-- Delete Confirmation Modal -->
-            <div id="deleteModal" class="modal">
-              <div class="modal-content">
-                <a href="#" class="close-btn" onclick="closeModal('deleteModal')">&times;</a>
-                <h2>Confirm Delete</h2>
-                <p>Are you sure you want to remove this employee?</p>
-                <form id="deleteForm" method="POST" action="employee-delete.php">
-                  <input type="hidden" name="EmployeeID" id="deleteEmployeeID" />
-                  <button type="submit" class="delete">Yes, Delete</button>
-                  <button type="button" class="cancel" onclick="closeModal('deleteModal')">Cancel</button>
-                </form>
-              </div>
-            </div>
-
-          <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-
 
 
       <!-- Export Buttons -->
@@ -411,12 +487,25 @@ if ($result && $result->num_rows > 0) {
 
         <label>Date Hired:</label>
         <input type="date" name="DateHired" required />
+        <label>Username:</label>
+        <input type="text" name="Username" required />
+
+        <label>Password:</label>
+        <input type="text" name="Password" required />
+
+        <label>Role:</label>
+        <select name="Role" required>
+          <option value="Admin">Admin</option>
+          <option value="Owner">Owner</option>
+          <option value="Employee" selected>Employee</option>
+        </select>
+
 
         <div class="modal-actions">
           <button type="submit" class="btn-save">💾 Add Employee</button>
           <button type="button" class="btn-cancel" onclick="closeModal('addModal')">Cancel</button>
           <div class="form-group">
-           
+
             <button type="button" onclick="openAddCardModal()">+ Add New Card</button>
           </div>
 
@@ -450,121 +539,153 @@ if ($result && $result->num_rows > 0) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <script>
+  // 🔹 Open modal (unified)
+  function openModal(id) {
+    document.getElementById(id).classList.add("active");
+  }
 
-    function openAddCardModal() {
-      document.getElementById('addCardModal').style.display = 'block';
-    }
+  // 🔹 Close modal (unified)
+  function closeModal(id) {
+    document.getElementById(id).classList.remove("active");
+  }
 
-    function saveNewCard() {
-  let CardUID = document.getElementById('newCardUID').value;
-  let IsActive = document.getElementById('newIsActive').checked ? 1 : 0;
+  // 🔹 Add Card Modal
+  function openAddCardModal() {
+    openModal('addCardModal');
+  }
 
-  // Automatically set IssueDate = today, ExpiryDate = today + 1 year
-  let today = new Date();
-  let IssueDate = today.toISOString().split('T')[0];
+  function saveNewCard() {
+    let CardUID = document.getElementById('newCardUID').value;
+    let IsActive = document.getElementById('newIsActive').checked ? 1 : 0;
 
-  let nextYear = new Date();
-  nextYear.setFullYear(today.getFullYear() + 1);
-  let ExpiryDate = nextYear.toISOString().split('T')[0];
+    // Automatically set IssueDate = today, ExpiryDate = today + 1 year
+    let today = new Date();
+    let IssueDate = today.toISOString().split('T')[0];
 
-  fetch('nfc-card-add.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ CardUID, IssueDate, ExpiryDate, IsActive })
-  })
-  .then(res => res.text())
-  .then(data => {
-    alert('Card added successfully!');
-    document.getElementById('addNfcCardID').value = CardUID;
-    closeModal('addCardModal');
-  })
-  .catch(err => console.error(err));
-}
+    let nextYear = new Date();
+    nextYear.setFullYear(today.getFullYear() + 1);
+    let ExpiryDate = nextYear.toISOString().split('T')[0];
 
+    fetch('nfc-card-add.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ CardUID, IssueDate, ExpiryDate, IsActive })
+    })
+      .then(res => res.text())
+      .then(data => {
+        alert('Card added successfully!');
+        document.getElementById('addNfcCardID').value = CardUID;
+        closeModal('addCardModal');
+      })
+      .catch(err => console.error(err));
+  }
 
-    function openViewModal(button) {
-      const row = button.closest('tr');
-      document.getElementById("viewEmployeeID").innerText = row.children[0].innerText;
-      document.getElementById("viewNfcCardID").innerText = row.children[1].innerText;
-      document.getElementById("viewFirstName").innerText = row.children[2].innerText;
-      document.getElementById("viewLastName").innerText = row.children[3].innerText;
-      document.getElementById("viewPosition").innerText = row.children[4].innerText;
-      document.getElementById("viewContactInfo").innerText = row.children[5].innerText;
-      document.getElementById("viewStatus").innerText = row.children[6].innerText;
-      document.getElementById("viewDateHired").innerText = row.children[7].innerText;
-      document.getElementById("viewModal").style.display = "block";
-    }
+  // 🔹 View Employee Modal
+  function openViewModal(button) {
+    const row = button.closest('tr');
+    document.getElementById("viewEmployeeID").innerText = row.children[0].innerText;
+    document.getElementById("viewNfcCardID").innerText = row.children[1].innerText;
+    document.getElementById("viewFirstName").innerText = row.children[2].innerText;
+    document.getElementById("viewLastName").innerText = row.children[3].innerText;
+    document.getElementById("viewPosition").innerText = row.children[4].innerText;
+    document.getElementById("viewContactInfo").innerText = row.children[5].innerText;
+    document.getElementById("viewStatus").innerText = row.children[6].innerText;
+    document.getElementById("viewDateHired").innerText = row.children[7].innerText;
+    openModal("viewModal");
+  }
 
-    function openEditModal(button) {
-      const row = button.closest('tr');
-      document.getElementById("editEmployeeID").value = row.children[0].innerText;
-      document.getElementById("editNfcCardID").value = row.children[1].innerText;
-      document.getElementById("editFirstName").value = row.children[2].innerText;
-      document.getElementById("editLastName").value = row.children[3].innerText;
-      document.getElementById("editPosition").value = row.children[4].innerText;
-      document.getElementById("editContactInfo").value = row.children[5].innerText;
-      document.getElementById("editStatus").value = row.children[6].innerText;
-      document.getElementById("editDateHired").value = row.children[7].innerText;
-      document.getElementById("editModal").style.display = "block";
-    }
+  // 🔹 Edit Employee Modal
+  function openEditModal(employeeId) {
+    fetch("get_employee_details.php?id=" + employeeId)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
 
-    function openDeleteModal(button) {
-      const row = button.closest('tr');
-      document.getElementById("deleteEmployeeID").value = row.children[0].innerText;
-      document.getElementById("deleteModal").style.display = "block";
-    }
+        // Fill form fields
+        document.getElementById("editEmployeeID").value = data.EmployeeID;
+        document.getElementById("editFirstName").value = data.FirstName;
+        document.getElementById("editLastName").value = data.LastName;
+        document.getElementById("editPosition").value = data.Position;
+        document.getElementById("editStatus").value = data.Status;
+        document.getElementById("editContactInfo").value = data.ContactInfo;
+        document.getElementById("editDateHired").value = data.DateHired;
 
+        document.getElementById("editUsername").value = data.Username || "";
+        document.getElementById("editPassword").value = data.Password || "";
+        document.getElementById("editRole").value = data.Role || "Employee";
 
-    function closeModal(modalId) {
-      document.getElementById(modalId).style.display = "none";
-    }
+        // Select NFC card if assigned
+        if (data.NfcCardID) {
+          document.getElementById("editNfcCardID").value = data.NfcCardID;
+        } else {
+          document.getElementById("editNfcCardID").value = "";
+        }
 
-    // Close modal if clicked outside
-    window.onclick = function (event) {
-      document.querySelectorAll(".modal").forEach(modal => {
-        if (event.target === modal) modal.style.display = "none";
-      });
-    };
-    // Search
-    document.getElementById("searchInput").addEventListener("keyup", function () {
-      let filter = this.value.toLowerCase();
-      document.querySelectorAll("#employeeTable tbody tr").forEach(row => {
-        row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
-      });
+        openModal("editModal");
+      })
+      .catch(err => console.error(err));
+  }
+
+  // 🔹 Delete Employee Modal
+  function openDeleteModal(button) {
+    const row = button.closest('tr');
+    document.getElementById("deleteEmployeeID").value = row.children[0].innerText;
+    openModal("deleteModal");
+  }
+
+  // 🔹 Close modal if clicked outside
+  window.onclick = function (event) {
+    document.querySelectorAll(".modal").forEach(modal => {
+      if (event.target === modal) {
+        modal.classList.remove("active");
+      }
     });
+  };
 
-    // Export CSV
-    document.getElementById("exportCSV").addEventListener("click", () => {
-      let rows = document.querySelectorAll("table tr");
-      let csv = "";
-      rows.forEach(row => {
-        let cols = row.querySelectorAll("td, th");
-        let rowData = Array.from(cols).map(col => `"${col.innerText}"`).join(",");
-        csv += rowData + "\n";
-      });
-      let blob = new Blob([csv], { type: "text/csv" });
-      let link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "employees.csv";
-      link.click();
+  // 🔹 Search
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    document.querySelectorAll("#employeeTable tbody tr").forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(filter) ? "" : "none";
     });
+  });
 
-    // Export Excel
-    document.getElementById("exportExcel").addEventListener("click", () => {
-      const table = document.getElementById("employeeTable");
-      const wb = XLSX.utils.table_to_book(table, { sheet: "Employees" });
-      XLSX.writeFile(wb, "employees.xlsx");
+  // 🔹 Export CSV
+  document.getElementById("exportCSV").addEventListener("click", () => {
+    let rows = document.querySelectorAll("table tr");
+    let csv = "";
+    rows.forEach(row => {
+      let cols = row.querySelectorAll("td, th");
+      let rowData = Array.from(cols).map(col => `"${col.innerText}"`).join(",");
+      csv += rowData + "\n";
     });
+    let blob = new Blob([csv], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "employees.csv";
+    link.click();
+  });
 
-    // Export PDF
-    document.getElementById("exportPDF").addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text("Employee List", 14, 16);
-      doc.autoTable({ html: "#employeeTable", startY: 20 });
-      doc.save("employees.pdf");
-    });
-  </script>
+  // 🔹 Export Excel
+  document.getElementById("exportExcel").addEventListener("click", () => {
+    const table = document.getElementById("employeeTable");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Employees" });
+    XLSX.writeFile(wb, "employees.xlsx");
+  });
+
+  // 🔹 Export PDF
+  document.getElementById("exportPDF").addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Employee List", 14, 16);
+    doc.autoTable({ html: "#employeeTable", startY: 20 });
+    doc.save("employees.pdf");
+  });
+</script>
+
 </body>
 
 </html>
