@@ -1,3 +1,25 @@
+<?php
+session_start();
+include '../db.php';
+
+// Make sure employee is logged in
+if (!isset($_SESSION['EmployeeID']) || $_SESSION['Role'] !== "Employee") {
+  header("Location: ../index.php");
+  exit;
+}
+
+$employeeId = $_SESSION['EmployeeID'];
+
+$sql = "SELECT PayPeriod, GrossPay, Deduction, NetPay, Remarks, ProcessedBy, ProcessedDate
+        FROM payroll
+        WHERE EmployeeID = ?
+        ORDER BY ProcessedDate DESC";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $employeeId);
+$stmt->execute();
+$result = $stmt->get_result();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,26 +38,26 @@
   <nav>
   <ul class="sidebar-menu">
     <li>
-  <a href="employee-dashboard.html" class="menu-link">
+  <a href="employee-dashboard.php" class="menu-link">
     <i class="fa fa-home"></i>
     Dashboard
   </a>
 </li>
 <li>
-  <a href="attendance.html" class="menu-link">
+  <a href="attendance.php" class="menu-link">
     <i class="fa-solid fa-calendar"></i>
     Attendance
   </a>
 </li>
 
 <li>
-  <a href="Payroll.html" class="menu-link active">
+  <a href="Payroll.php" class="menu-link active">
     <i class="fa-solid fa-money-bill"></i>
     Payroll
   </a>
 </li>
 <li>
-  <a href="../index.html" class="menu-link">
+  <a href="../logout.php" class="menu-link">
     <i class="fa-solid fa-right-from-bracket"></i>
     Logout
   </a>
@@ -82,50 +104,37 @@
 <div class="table">
   <h2>Payroll Summary</h2>
   <table id="Table">
-    <thead>
-      <tr>
-        <th>Pay Period</th>
-        <th>Basic Salary</th>
-        <th>Deductions</th>
-        <th>Bonuses</th>
-        <th>Net Pay</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>July 2025</td>
-        <td>₱15,000</td>
-        <td>₱1,000</td>
-        <td>₱500</td>
-        <td>₱14,500</td>
-        <td class="status green">Paid</td>
-      </tr>
-      <tr>
-        <td>June 2025</td>
-        <td>₱15,000</td>
-        <td>₱800</td>
-        <td>₱300</td>
-        <td>₱14,500</td>
-        <td class="status green">Paid</td>
-      </tr>
-      <tr>
-        <td>May 2025</td>
-        <td>₱15,000</td>
-        <td>₱0</td>
-        <td>₱0</td>
-        <td>₱15,000</td>
-        <td class="status green">Paid</td>
-      </tr>
-      <tr>
-      <td>April 2025</td>
-      <td>₱15,000</td>
-      <td>₱500</td>
-      <td>₱200</td>
-      <td>₱14,700</td>
-      <td class="status red">Unpaid</td>
-    </tr>
-    </tbody>
+  <thead>
+  <tr>
+    <th>Pay Period</th>
+    <th>Gross Pay</th>
+    <th>Deduction</th>
+    <th>Net Pay</th>
+    <th>Remarks</th>
+  </tr>
+</thead>
+
+<tbody>
+<?php
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $remarksClass = strtolower($row['Remarks']) === 'paid' ? 'green' : 'red';
+
+        echo "<tr>
+                <td>{$row['PayPeriod']}</td>
+                <td>₱".number_format($row['GrossPay'], 2)."</td>
+                <td>₱".number_format($row['Deduction'], 2)."</td>
+                <td>₱".number_format($row['NetPay'], 2)."</td>
+                <td class='status {$remarksClass}'>{$row['Remarks']}</td>
+              </tr>";
+    }
+} else {
+    echo "<tr><td colspan='6'>No payroll records found for your account.</td></tr>";
+}
+$stmt->close();
+$conn->close();
+?>
+</tbody>
   </table>
 </div>
   </main>

@@ -6,10 +6,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    // Prepare query
+    // Fetch user by username
     $sql = "SELECT * FROM users WHERE Username = ? LIMIT 1";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $username); // bind username
+    $stmt->bind_param("s", $username);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -18,7 +18,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Password check (plain text for now)
         if ($password === $row['Password']) {
-            // Store session data
+
+            // If Employee, check termination status
+            if ($row['Role'] === "Employee") {
+                $empCheck = $conn->prepare("SELECT Status FROM employees WHERE EmployeeID = ?");
+                $empCheck->bind_param("i", $row['EmployeeID']); // Use EmployeeID, not UserID
+                $empCheck->execute();
+                $empRes = $empCheck->get_result()->fetch_assoc();
+                $empCheck->close();
+
+                if ($empRes && $empRes['Status'] === 'Terminated') {
+                    echo "<p style='color:red; text-align:center;'>❌ Your account has been terminated. Contact HR.</p>";
+                    exit;
+                }
+
+                // Store EmployeeID in session
+                $_SESSION['EmployeeID'] = $row['EmployeeID'];
+            }
+
+            // Store general session data
             $_SESSION['UserID']   = $row['UserID'];
             $_SESSION['Username'] = $row['Username'];
             $_SESSION['Role']     = $row['Role'];
