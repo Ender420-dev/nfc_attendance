@@ -9,16 +9,6 @@ if (!isset($_SESSION['EmployeeID']) || $_SESSION['Role'] !== "Employee") {
 }
 
 $employeeID = $_SESSION['EmployeeID'];
-
-// Fetch attendance records
-$sql = "SELECT WorkDate, ScanType, IsLate, ScanTime, Remarks 
-        FROM attendance 
-        WHERE EmployeeID = ? 
-        ORDER BY WorkDate DESC";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $employeeID);
-$stmt->execute();
-$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -38,26 +28,10 @@ $result = $stmt->get_result();
   </div>
   <nav>
     <ul class="sidebar-menu">
-      <li>
-        <a href="employee-dashboard.php" class="menu-link">
-          <i class="fa fa-home"></i> Dashboard
-        </a>
-      </li>
-      <li>
-        <a href="attendance.php" class="menu-link active">
-          <i class="fa-solid fa-calendar"></i> Attendance
-        </a>
-      </li>
-      <li>
-        <a href="payroll.php" class="menu-link">
-          <i class="fa-solid fa-money-bill"></i> Payroll
-        </a>
-      </li>
-      <li>
-        <a href="../logout.php" class="menu-link">
-          <i class="fa-solid fa-right-from-bracket"></i> Logout
-        </a>
-      </li>
+      <li><a href="employee-dashboard.php" class="menu-link"><i class="fa fa-home"></i> Dashboard</a></li>
+      <li><a href="attendance.php" class="menu-link active"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
+      <li><a href="payroll.php" class="menu-link"><i class="fa-solid fa-money-bill"></i> Payroll</a></li>
+      <li><a href="../logout.php" class="menu-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
     </ul>
   </nav>
 </aside>
@@ -81,31 +55,114 @@ $result = $stmt->get_result();
         <th>REMARKS</th>
       </tr>
     </thead>
-    <tbody>
-      <?php if ($result->num_rows > 0): ?>
-        <?php while ($row = $result->fetch_assoc()): ?>
-          <tr>
-            <td><?= htmlspecialchars($row['WorkDate']); ?></td>
-            <td><?= htmlspecialchars($row['ScanType']); ?></td>
-            <td><?= htmlspecialchars($row['ScanTime']); ?></td>
-            <td><?= $row['IsLate'] ? "Yes" : "No"; ?></td>
-            <td><?= htmlspecialchars($row['Remarks']); ?></td>
-          </tr>
-        <?php endwhile; ?>
-      <?php else: ?>
-        <tr><td colspan="5" style="text-align:center;">No attendance records found.</td></tr>
-      <?php endif; ?>
+    <tbody id="attendanceBody">
+      <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
     </tbody>
   </table>
 </div>
 </section>
 </main>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("fetch_attendance.php")
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById("attendanceBody");
+      tbody.innerHTML = ""; // clear "Loading..."
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No attendance records found.</td></tr>';
+        return;
+      }
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.WorkDate}</td>
+          <td>${row.ScanType}</td>
+          <td>${row.ScanTime}</td>
+          <td>${row.IsLate == 1 ? "Yes" : "No"}</td>
+          <td>${row.Remarks}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    })
+    .catch(err => {
+      console.error("Error fetching attendance:", err);
+      document.getElementById("attendanceBody").innerHTML =
+        '<tr><td colspan="5" style="text-align:center;color:red;">Error loading records.</td></tr>';
+    });
+});
+document.addEventListener("DOMContentLoaded", () => {
+  let lastScanID = null; // store last seen attendance record
+
+  function loadAttendance(showNotif = false) {
+    fetch("fetch_attendance.php")
+      .then(response => response.json())
+      .then(data => {
+        const tbody = document.getElementById("attendanceBody");
+        tbody.innerHTML = ""; // clear table
+
+        if (data.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;">No attendance records found.</td></tr>';
+          return;
+        }
+
+        data.forEach((row, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.WorkDate}</td>
+            <td>${row.ScanType}</td>
+            <td>${row.ScanTime}</td>
+            <td>${row.IsLate == 1 ? "Yes" : "No"}</td>
+            <td>${row.Remarks}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // 🔔 Notification check
+        const latest = data[0]; // first row = latest
+        if (showNotif && lastScanID !== null && latest.AttendanceID !== lastScanID) {
+          showNotification(`${latest.ScanType} recorded at ${latest.ScanTime}`);
+        }
+
+        // update last seen ID
+        lastScanID = latest.AttendanceID;
+      })
+      .catch(err => {
+        console.error("Error fetching attendance:", err);
+        document.getElementById("attendanceBody").innerHTML =
+          '<tr><td colspan="5" style="text-align:center;color:red;">Error loading records.</td></tr>';
+      });
+  }
+
+  // 🔔 Simple notification popup
+  function showNotification(message) {
+    let notif = document.createElement("div");
+    notif.textContent = "✅ " + message;
+    notif.style.position = "fixed";
+    notif.style.top = "20px";
+    notif.style.right = "20px";
+    notif.style.background = "#4caf50";
+    notif.style.color = "white";
+    notif.style.padding = "10px 15px";
+    notif.style.borderRadius = "8px";
+    notif.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+    document.body.appendChild(notif);
+
+    setTimeout(() => notif.remove(), 3000);
+  }
+
+  // first load (no notif)
+  loadAttendance(false);
+
+  // refresh every 5 seconds (with notif check)
+  setInterval(() => loadAttendance(true), 1000);
+});
+</script>
+
 <script src="../js/main.js"></script>
 </body>
 </html>
-
-<?php 
-$stmt->close();
-$conn->close(); 
-?>
