@@ -6,7 +6,7 @@ if (isset($_GET['id'])) {
 
     $sql = "SELECT e.EmployeeID, e.FirstName, e.LastName, e.Position, 
                    e.NfcCardID, e.Status, e.ContactInfo, e.DateHired,
-                   u.Username, u.Password, u.Role
+                   u.Username, u.Password, u.Role, u.email
             FROM employees e
             LEFT JOIN users u ON e.EmployeeID = u.EmployeeID
             WHERE e.EmployeeID = ? LIMIT 1";

@@ -3,7 +3,12 @@ session_start();
 include '../db.php';
 
 // Ensure only logged-in employee can access
-if (!isset($_SESSION['EmployeeID']) || $_SESSION['Role'] !== "Employee") {
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+  header("Location: ../index.php");
+  exit();
+}
+// Ensure only admin can access
+if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Employee") {
     header("Location: ../index.php");
     exit;
 }

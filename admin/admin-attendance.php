@@ -1,7 +1,10 @@
 <?php
 session_start();
 include '../db.php';
-
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+  header("Location: ../index.php");
+  exit();
+}
 // Ensure only admin can access
 if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Admin") {
     header("Location: ../index.php");
@@ -14,7 +17,7 @@ if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Admin") {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Attendance</title>
-  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/admin.css?v=1.4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="icon" type="image/png" href="../images/logo.png" />
 
@@ -46,24 +49,55 @@ if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Admin") {
 </head>
 <body class="dashboard-page">
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">
-    <img src="../images/salon.jpg" alt="Company Logo" />
-  </div>
-  <nav>
-    <ul class="sidebar-menu">
-      <li><a href="admin-dashboard.php" class="menu-link"><i class="fa fa-home"></i> Dashboard</a></li>
-      <li><a href="admin-attendance.php" class="menu-link active"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
-      <li><a href="payroll.php" class="menu-link"><i class="fa-solid fa-money-bill"></i> Payroll</a></li>
-      <li><a href="../logout.php" class="menu-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
-    </ul>
-  </nav>
-</aside>
+    <div class="sidebar-logo">
+      <img src="../images/salon.jpg" alt="Company Logo" />
+    </div>
+    <nav>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="admin-dashboard.php" class="menu-link ">
+            <i class="fa fa-home"></i> Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="employee-management.php" class="menu-link">
+            <i class="fa-solid fa-users"></i> Employee Management
+          </a>
+        </li>
+        <li>
+          <a href="admin-attendance.php" class="menu-link active">
+            <i class="fa-solid fa-calendar"></i> Attendance
+          </a>
+        </li>
+        <li>
+          <a href="attendance-management.php" class="menu-link">
+            <i class="fa-solid fa-clipboard-list"></i> Attendance Management
+          </a>
+        </li>
+        <li>
+          <a href="payroll-management.php" class="menu-link">
+            <i class="fa-solid fa-money-bill"></i> Payroll Management
+          </a>
+        </li>
+        <li>
+          <a href="../index.php" class="menu-link">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 
 <main class="dashboard-content">
-  <header class="dashboard-header">
-    <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars"></i></button>
-    <div class="profile-icon" id="profileIcon"><i class="fa-regular fa-circle-user"></i></div>
-  </header>
+<header class="dashboard-header">
+  <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars"></i></button>
+  <div class="profile-icon">
+    <i class="fa-regular fa-circle-user"></i>
+    <span style="margin-left:8px; font-weight:600;">
+      <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Guest'); ?>
+    </span>
+  </div>
+</header>
 
 <section class="main-section">
 <div class="table">

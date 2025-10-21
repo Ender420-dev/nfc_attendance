@@ -1,7 +1,15 @@
 <?php
 session_start();
 include '../db.php';
-
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+  header("Location: ../index.php");
+  exit();
+}
+// Ensure only admin can access
+if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Admin") {
+    header("Location: ../index.php");
+    exit;
+}
 // Fetch employees with NFC card if available
 $sql = "SELECT 
     e.EmployeeID, 
@@ -35,7 +43,7 @@ if ($result && $result->num_rows > 0) {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Employee Management</title>
-  <link rel="stylesheet" href="../css/admin.css?v=1.2" />
+  <link rel="stylesheet" href="../css/admin.css?v=1.4" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="icon" type="image/png" href="../images/logo.png" />
 </head>
@@ -224,24 +232,51 @@ if ($result && $result->num_rows > 0) {
     </div>
     <nav>
       <ul class="sidebar-menu">
-        <li><a href="admin-dashboard.php"><i class="fa fa-home"></i> Dashboard</a></li>
-        <li><a href="employee-management.php" class="active"><i class="fa-solid fa-users"></i> Employee Management</a>
+        <li>
+          <a href="admin-dashboard.php" class="menu-link ">
+            <i class="fa fa-home"></i> Dashboard
+          </a>
         </li>
-        <li><a href="admin-attendance.php"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
-        <li><a href="attendance-management.php"><i class="fa-solid fa-clipboard-list"></i> Attendance Management</a>
+        <li>
+          <a href="employee-management.php" class="menu-link active">
+            <i class="fa-solid fa-users"></i> Employee Management
+          </a>
         </li>
-        <li><a href="payroll-management.php"><i class="fa-solid fa-money-bill"></i> Payroll Management</a></li>
-        <li><a href="../index.php"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        <li>
+          <a href="admin-attendance.php" class="menu-link ">
+            <i class="fa-solid fa-calendar"></i> Attendance
+          </a>
+        </li>
+        <li>
+          <a href="attendance-management.php" class="menu-link">
+            <i class="fa-solid fa-clipboard-list"></i> Attendance Management
+          </a>
+        </li>
+        <li>
+          <a href="payroll-management.php" class="menu-link">
+            <i class="fa-solid fa-money-bill"></i> Payroll Management
+          </a>
+        </li>
+        <li>
+          <a href="../index.php" class="menu-link">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+          </a>
+        </li>
       </ul>
     </nav>
   </aside>
 
   <!-- Main Content -->
   <main class="dashboard-content">
-    <header class="dashboard-header">
-      <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars"></i></button>
-      <div class="profile-icon"><i class="fa-regular fa-circle-user"></i></div>
-    </header>
+  <header class="dashboard-header">
+  <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars"></i></button>
+  <div class="profile-icon">
+    <i class="fa-regular fa-circle-user"></i>
+    <span style="margin-left:8px; font-weight:600;">
+      <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Guest'); ?>
+    </span>
+  </div>
+</header>
 
     <section class="main-section">
       <div class="search-filter-container">
@@ -277,6 +312,7 @@ if ($result && $result->num_rows > 0) {
                 <td><?= htmlspecialchars($emp['LastName']) ?></td>
                 <td><?= htmlspecialchars($emp['Position']) ?></td>
                 <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
+                 <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
                 <td><?= htmlspecialchars($emp['Status']) ?></td>
                 <td><?= htmlspecialchars($emp['DateHired']) ?></td>
                 <td>
@@ -284,7 +320,7 @@ if ($result && $result->num_rows > 0) {
                   <button class="edit" onclick="openEditModal(<?= $emp['EmployeeID'] ?>)">Edit</button>
 
 
-                  <button class="delete" onclick="openDeleteModal(this)">Remove</button>
+               
                 </td>
               </tr>
             </tbody>
@@ -350,6 +386,10 @@ if ($result && $result->num_rows > 0) {
                       <span id="viewContactInfo"></span>
                     </div>
                     <div class="detail-item">
+                      <label>Email</label>
+                      <span id="viewEmail"></span>
+                    </div>
+                    <div class="detail-item">
                       <label>Status</label>
                       <span id="viewStatus"></span>
                     </div>
@@ -408,6 +448,8 @@ if ($result && $result->num_rows > 0) {
 
                   <label>Date Hired:</label>
                   <input type="date" name="DateHired" id="editDateHired" required />
+                  <label>Email:</label>
+                  <input type="email" name="email" id="email" required />
 
                   <label>Username:</label>
                   <input type="text" name="Username" id="editUsername" required />
@@ -435,11 +477,7 @@ if ($result && $result->num_rows > 0) {
 
 
       <!-- Export Buttons -->
-      <div class="export-buttons">
-        <button id="exportCSV" class="add">Export CSV</button>
-        <button id="exportExcel" class="add">Export Excel</button>
-        <button id="exportPDF" class="add">Export PDF</button>
-      </div>
+      <!--  -->
     </section>
   </main>
 
@@ -503,7 +541,7 @@ if ($result && $result->num_rows > 0) {
 
         <div class="modal-actions">
           <button type="submit" class="btn-save">💾 Add Employee</button>
-          <button type="button" class="btn-cancel" onclick="closeModal('addModal')">Cancel</button>
+         
           <div class="form-group">
 
             <button type="button" onclick="openAddCardModal()">+ Add New Card</button>
@@ -591,6 +629,7 @@ if ($result && $result->num_rows > 0) {
     document.getElementById("viewContactInfo").innerText = row.children[5].innerText;
     document.getElementById("viewStatus").innerText = row.children[6].innerText;
     document.getElementById("viewDateHired").innerText = row.children[7].innerText;
+
     openModal("viewModal");
   }
 
@@ -616,6 +655,7 @@ if ($result && $result->num_rows > 0) {
         document.getElementById("editUsername").value = data.Username || "";
         document.getElementById("editPassword").value = data.Password || "";
         document.getElementById("editRole").value = data.Role || "Employee";
+        document.getElementById("email").value = data.email || "";
 
         // Select NFC card if assigned
         if (data.NfcCardID) {

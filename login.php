@@ -1,12 +1,15 @@
 <?php
 session_start();
 include 'db.php';
+require 'vendor/autoload.php'; // PHPMailer autoload
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
-    // Fetch user by username
     $sql = "SELECT * FROM users WHERE Username = ? LIMIT 1";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
@@ -16,13 +19,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result && $result->num_rows === 1) {
         $row = $result->fetch_assoc();
 
-        // Password check (plain text for now)
         if ($password === $row['Password']) {
 
-            // If Employee, check termination status
+            // ✅ Check if employee is terminated
             if ($row['Role'] === "Employee") {
                 $empCheck = $conn->prepare("SELECT Status FROM employees WHERE EmployeeID = ?");
-                $empCheck->bind_param("i", $row['EmployeeID']); // Use EmployeeID, not UserID
+                $empCheck->bind_param("i", $row['EmployeeID']);
                 $empCheck->execute();
                 $empRes = $empCheck->get_result()->fetch_assoc();
                 $empCheck->close();
@@ -32,35 +34,52 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     exit;
                 }
 
-                // Store EmployeeID in session
                 $_SESSION['EmployeeID'] = $row['EmployeeID'];
             }
 
-            // Store general session data
-            $_SESSION['UserID']   = $row['UserID'];
-            $_SESSION['Username'] = $row['Username'];
-            $_SESSION['Role']     = $row['Role'];
+            // ✅ Generate OTP
+            $otp = rand(100000, 999999);
+            $_SESSION['OTP'] = $otp;
+            $_SESSION['OTP_Expire'] = time() + 300; // 5 min expiry
+            $_SESSION['PendingUser'] = [
+                'UserID' => $row['EmployeeID'], // store EmployeeID for name lookup
+                'Username' => $row['Username'],
+                'Role' => $row['Role'],
+                'Email' => $row['email']
+            ];
 
-            // Redirect by role
-            switch ($row['Role']) {
-                case "Admin":
-                    header("Location: admin/admin-dashboard.php");
-                    break;
-                case "Owner":
-                    header("Location: owner/owner-dashboard.php");
-                    break;
-                case "Employee":
-                    header("Location: employee/employee-dashboard.php");
-                    break;
-                default:
-                    echo "<p style='color:red; text-align:center;'>❌ Role not recognized</p>";
+            // ✅ Send OTP email
+            $mail = new PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host = 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = 'cannonroly123@gmail.com'; // your Gmail
+                $mail->Password = 'xuvuhhjjvixcyjta'; // Gmail App password
+                $mail->SMTPSecure = 'tls';
+                $mail->Port = 587;
+
+                $mail->setFrom('cannonroly123@gmail.com', 'Salon System');
+                $mail->addAddress($row['email']);
+                $mail->isHTML(true);
+                $mail->Subject = 'Salon System OTP Verification';
+                $mail->Body = "<h3>Your OTP Code is: <b>$otp</b></h3><p>This code expires in 5 minutes.</p>";
+
+                $mail->send();
+
+                // ✅ Redirect to OTP verification page
+                header("Location: verify-otp.php");
+                exit;
+
+            } catch (Exception $e) {
+                echo "<p style='color:red; text-align:center;'>❌ Could not send OTP. Error: {$mail->ErrorInfo}</p>";
             }
-            exit;
+
         } else {
-            echo "<p style='color:red; text-align:center;'>❌ Invalid password</p>";
+            echo "<p style='color:red; text-align:center;'>❌ Invalid password.</p>";
         }
     } else {
-        echo "<p style='color:red; text-align:center;'>❌ User not found</p>";
+        echo "<p style='color:red; text-align:center;'>❌ User not found.</p>";
     }
 
     $stmt->close();

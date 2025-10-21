@@ -2,31 +2,29 @@
 session_start();
 include '../db.php';
 
-// 1) Require login
-if (!isset($_SESSION['EmployeeID']) || $_SESSION['Role'] !== "Employee") {
-  header("Location: ../index.php");
-  exit;
+// ✅ Allow employee login to work (case-insensitive role/session checks)
+$role = $_SESSION['Role'] ?? $_SESSION['role'] ?? null;
+$userID = $_SESSION['UserID'] ?? $_SESSION['user_id'] ?? null;
+
+// ✅ Ensure logged-in user
+if (empty($userID)) {
+    header("Location: ../index.php");
+    exit();
 }
 
-$UserID = intval($_SESSION['UserID']);
-$Role   = $_SESSION['Role'] ?? '';
-
-// 2) If user is Admin/Owner, redirect them to respective dashboards (optional)
-if ($Role === 'Admin') {
-    header("Location: ../admin/admin-dashboard.php");
-    exit;
-}
-if ($Role === 'Owner') {
-    header("Location: ../owner/owner-dashboard.php");
-    exit;
+// ✅ Ensure role is Employee
+if (empty($role) || strtolower($role) !== "employee") {
+    header("Location: ../index.php");
+    exit();
 }
 
-// 3) Get EmployeeID linked to this user (users table should contain EmployeeID)
+// ✅ Get EmployeeID linked to this user
 $employeeId = null;
 $stmt = $conn->prepare("SELECT EmployeeID FROM users WHERE UserID = ? LIMIT 1");
-$stmt->bind_param("i", $UserID);
+$stmt->bind_param("i", $userID);
 $stmt->execute();
 $res = $stmt->get_result();
+
 if ($res && $res->num_rows > 0) {
     $tmp = $res->fetch_assoc();
     $employeeId = intval($tmp['EmployeeID']);
@@ -34,43 +32,45 @@ if ($res && $res->num_rows > 0) {
 $stmt->close();
 
 if (empty($employeeId)) {
-    // No employee account linked — show message or redirect
     die("<p style='color:red; text-align:center;'>No employee profile linked to this account. Contact admin.</p>");
 }
 
-// 4) Fetch employee info
+// ✅ Fetch employee info
 $stmt = $conn->prepare("SELECT FirstName, LastName, ShiftStart, ShiftEnd FROM employees WHERE EmployeeID = ? LIMIT 1");
 $stmt->bind_param("i", $employeeId);
 $stmt->execute();
 $empRes = $stmt->get_result();
+
 if (!$empRes || $empRes->num_rows === 0) {
     $stmt->close();
     die("<p style='color:red; text-align:center;'>Employee record not found.</p>");
 }
+
 $emp = $empRes->fetch_assoc();
 $stmt->close();
 
-// 5) Fetch payroll total for this month (uses ProcessedDate field if available)
-$stmt = $conn->prepare(
-    "SELECT COALESCE(SUM(NetPay),0) AS totalEarnings
-     FROM payroll
-     WHERE EmployeeID = ?
-       AND MONTH(ProcessedDate) = MONTH(CURDATE())
-       AND YEAR(ProcessedDate) = YEAR(CURDATE())"
-);
+// ✅ Fetch payroll total for this month
+$stmt = $conn->prepare("
+    SELECT COALESCE(SUM(NetPay),0) AS totalEarnings
+    FROM payroll
+    WHERE EmployeeID = ?
+      AND MONTH(ProcessedDate) = MONTH(CURDATE())
+      AND YEAR(ProcessedDate) = YEAR(CURDATE())
+");
 $stmt->bind_param("i", $employeeId);
 $stmt->execute();
 $payRes = $stmt->get_result();
 $pay = $payRes->fetch_assoc();
 $stmt->close();
 
-// Format shift times safely
 $shiftStart = !empty($emp['ShiftStart']) ? date("g:i A", strtotime($emp['ShiftStart'])) : 'N/A';
-$shiftEnd   = !empty($emp['ShiftEnd'])   ? date("g:i A", strtotime($emp['ShiftEnd']))   : 'N/A';
+$shiftEnd   = !empty($emp['ShiftEnd']) ? date("g:i A", strtotime($emp['ShiftEnd']))   : 'N/A';
 
-// Example: appointments count (replace with your real query)
-$appointmentsToday = 8; // demo
+// Example data
+$appointmentsToday = 8;
+$totalClients = 128;
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -81,7 +81,6 @@ $appointmentsToday = 8; // demo
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="icon" type="image/png" href="../images/logo.png" />
   <style>
-    /* tiny inline styling for quick fallback */
     .dashboard { display:flex; gap:16px; flex-wrap:wrap; }
     .stat-card { background:#fff; padding:18px; border-radius:8px; box-shadow:0 6px 16px rgba(0,0,0,.06); width:240px; }
     .stat-info h3 { margin:0 0 6px; font-size:14px; color:#666; }
@@ -90,13 +89,14 @@ $appointmentsToday = 8; // demo
   </style>
 </head>
 <body class="dashboard-page">
+
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo"><img src="../images/salon.jpg" alt="Company Logo" /></div>
   <nav>
     <ul class="sidebar-menu">
       <li><a href="employee-dashboard.php" class="menu-link active"><i class="fa fa-home"></i> Dashboard</a></li>
       <li><a href="attendance.php" class="menu-link"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
-      <li><a href="Payroll.php" class="menu-link"><i class="fa-solid fa-money-bill"></i> Payroll</a></li>
+      <li><a href="payroll.php" class="menu-link"><i class="fa-solid fa-money-bill"></i> Payroll</a></li>
       <li><a href="../logout.php" class="menu-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
     </ul>
   </nav>
@@ -105,7 +105,10 @@ $appointmentsToday = 8; // demo
 <main class="dashboard-content">
   <header class="dashboard-header">
     <button class="toggle-btn" id="toggleBtn"><i class="fa-solid fa-bars"></i></button>
-    <div class="profile-icon" id="profileIcon"><i class="fa-regular fa-circle-user"></i></div>
+    <div class="profile-icon" id="profileIcon">
+      <i class="fa-regular fa-circle-user"></i>
+      <span><?= htmlspecialchars($emp['FirstName'] . ' ' . $emp['LastName']) ?></span>
+    </div>
   </header>
 
   <h1>Welcome, <?= htmlspecialchars($emp['FirstName']) ?>!</h1>
@@ -135,20 +138,19 @@ $appointmentsToday = 8; // demo
         <p>₱<?= number_format($pay['totalEarnings'] ?? 0, 2) ?></p>
         <h4 style="font-weight:600;color:#888">15% service commission</h4>
       </div>
-      <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+      <div class="stat-icon"><i class="fas fa-sack-dollar"></i></div>
     </div>
 
     <div class="stat-card">
       <div class="stat-info">
         <h3>Total Clients</h3>
-        <p>128</p>
+        <p><?= htmlspecialchars($totalClients) ?></p>
         <h4 style="font-weight:600;color:#888">12 new this month</h4>
       </div>
       <div class="stat-icon"><i class="fas fa-users"></i></div>
     </div>
   </div>
 
-  <!-- sample appointments retained below -->
   <section class="dashboard-section">
     <div class="dashboard-grid">
       <div class="appointments-card">
@@ -194,7 +196,7 @@ $appointmentsToday = 8; // demo
           <div class="icon gray"><i class="fas fa-calendar-alt"></i></div>
           <div class="details">
             <h4>Holiday Hours</h4>
-            <p>The salon will be closed July 4th for Independence Day.</p>
+            <p>The salon will be closed on upcoming public holidays.</p>
             <span class="time">1 day ago</span>
           </div>
         </div>

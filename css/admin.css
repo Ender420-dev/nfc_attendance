@@ -24,12 +24,14 @@ html, body {
   height: 100%; 
   margin: 0; 
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+  
 }
 
 body {
   background: var(--background);
   display: flex;
   min-height: 100vh;
+  background-color: var(--pink-gradient);
 }
 
 .sidebar-logo {
@@ -52,9 +54,9 @@ body {
   left: 0;
   width: 220px;
   height: 100%;
-  background: var(--pink-lightest);
+  background: linear-gradient(180deg, var(--pink-accent), var(--pink-dark));
   padding: 0 0 1rem;
-  color: var(--pink-lightest);
+  color: var(--pink-dark);
   transition: left .3s ease;
   border-right: 1px solid var(--border-color);
 }
