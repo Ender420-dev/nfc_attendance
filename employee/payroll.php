@@ -2,12 +2,17 @@
 session_start();
 include '../db.php';
 
-// Make sure employee is logged in
-if (!isset($_SESSION['EmployeeID']) || $_SESSION['Role'] !== "Employee") {
-  header("Location: ../index.php");
-  exit;
-}
+// 🔐 Session and Role Validation
+$role = $_SESSION['role'] ?? null;
+$userID = $_SESSION['user_id'] ?? null;
 
+if (!$role || $role !== 'Employee' || !$userID) {
+    session_unset();
+    session_destroy();
+    header("Refresh:3; url=../index.php");
+    echo "<p style='text-align:center; color:red; font-weight:bold;'>⚠️ Unauthorized access. Redirecting to login...</p>";
+    exit;
+}
 $employeeId = $_SESSION['EmployeeID'];
 
 $sql = "SELECT PayPeriod, GrossPay, Deduction, NetPay, Remarks, ProcessedBy, ProcessedDate

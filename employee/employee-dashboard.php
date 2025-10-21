@@ -2,22 +2,17 @@
 session_start();
 include '../db.php';
 
-// ✅ Allow employee login to work (case-insensitive role/session checks)
-$role = $_SESSION['Role'] ?? $_SESSION['role'] ?? null;
-$userID = $_SESSION['UserID'] ?? $_SESSION['user_id'] ?? null;
+// 🔐 Session and Role Validation
+$role = $_SESSION['role'] ?? null;
+$userID = $_SESSION['user_id'] ?? null;
 
-// ✅ Ensure logged-in user
-if (empty($userID)) {
-    header("Location: ../index.php");
-    exit();
+if (!$role || $role !== 'Employee' || !$userID) {
+    session_unset();
+    session_destroy();
+    header("Refresh:3; url=../index.php");
+    echo "<p style='text-align:center; color:red; font-weight:bold;'>⚠️ Unauthorized access. Redirecting to login...</p>";
+    exit;
 }
-
-// ✅ Ensure role is Employee
-if (empty($role) || strtolower($role) !== "employee") {
-    header("Location: ../index.php");
-    exit();
-}
-
 // ✅ Get EmployeeID linked to this user
 $employeeId = null;
 $stmt = $conn->prepare("SELECT EmployeeID FROM users WHERE UserID = ? LIMIT 1");
@@ -153,32 +148,57 @@ $totalClients = 128;
 
   <section class="dashboard-section">
     <div class="dashboard-grid">
-      <div class="appointments-card">
-        <div class="appointments-header">
-          <h3>Today's Appointments</h3>
-          <a href="#" class="view-all">View All</a>
-        </div>
+    <div class="appointments-card">
+  <div class="appointments-header">
+    <h3>Today's Appointments</h3>
+    <a href="employee-appointments.php" class="view-all">View All</a>
+  </div>
 
-        <div class="appointment-item">
-          <div class="icon"><i class="fas fa-cut"></i></div>
-          <div class="details"><h4>Jennifer Lopez</h4><p>Full Color & Cut</p></div>
-          <div class="time">10:30 AM</div>
-        </div>
+  <?php
+  // ✅ Fetch today's appointments for this employee
+  $today = date('Y-m-d');
+  $apptStmt = $conn->prepare("
+      SELECT a.appointmentID, a.clientName, a.Time, a.dateAppointment,
+             s.ProcessName, s.ProcessPrice, a.status
+      FROM appointment a
+      JOIN services s ON a.processType = s.processID
+      WHERE a.EmployeeID = ? AND a.dateAppointment = ?
+      ORDER BY a.Time ASC
+  ");
+  $apptStmt->bind_param("is", $employeeId, $today);
+  $apptStmt->execute();
+  $apptResult = $apptStmt->get_result();
 
-        <div class="appointment-item">
-          <div class="icon"><i class="fas fa-spa"></i></div>
-          <div class="details"><h4>Alexis Johnson</h4><p>Hair Treatment</p></div>
-          <div class="time">12:00 PM</div>
-        </div>
+  if ($apptResult && $apptResult->num_rows > 0) {
+      while ($appt = $apptResult->fetch_assoc()) {
+          $time = date("g:i A", strtotime($appt['Time']));
+          $statusColor = match ($appt['status']) {
+              'Completed' => 'color:green;',
+              'Cancelled' => 'color:red;',
+              default => 'color:#888;'
+          };
+          echo "
+          <div class='appointment-item'>
+              <div class='icon'><i class='fas fa-user'></i></div>
+              <div class='details'>
+                  <h4>".htmlspecialchars($appt['clientName'])."</h4>
+                  <p>".htmlspecialchars($appt['ProcessName'])." - ₱".number_format($appt['ProcessPrice'], 2)."</p>
+                  <span style='$statusColor'>".htmlspecialchars($appt['status'])."</span>
+              </div>
+              <div class='time'>$time</div>
+          </div>
+          ";
+      }
+  } else {
+      echo "<p style='text-align:center; color:gray;'>No appointments scheduled for today.</p>";
+  }
 
-        <div class="appointment-item">
-          <div class="icon"><i class="fas fa-brush"></i></div>
-          <div class="details"><h4>Sophia Williams</h4><p>Styling Session</p></div>
-          <div class="time">2:30 PM</div>
-        </div>
+  $apptStmt->close();
+  ?>
 
-        <button class="add-btn">Add New Appointment</button>
-      </div>
+  <button class="add-btn" onclick="window.location.href='employee-add-appointment.php'">Add New Appointment</button>
+</div>
+
 
       <div class="announcements-card">
         <div class="announcements-header"><h3>Team Announcements</h3></div>

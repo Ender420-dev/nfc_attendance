@@ -2,14 +2,15 @@
 session_start();
 include '../db.php';
 
-// Ensure only logged-in employee can access
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-  header("Location: ../index.php");
-  exit();
-}
-// Ensure only admin can access
-if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Employee") {
-    header("Location: ../index.php");
+// 🔐 Session and Role Validation
+$role = $_SESSION['role'] ?? null;
+$userID = $_SESSION['user_id'] ?? null;
+
+if (!$role || $role !== 'Employee' || !$userID) {
+    session_unset();
+    session_destroy();
+    header("Refresh:3; url=../index.php");
+    echo "<p style='text-align:center; color:red; font-weight:bold;'>⚠️ Unauthorized access. Redirecting to login...</p>";
     exit;
 }
 

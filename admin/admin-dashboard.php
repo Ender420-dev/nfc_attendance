@@ -1,14 +1,16 @@
 <?php 
 session_start();
 include '../db.php';
-// ✅ SECURITY CHECK: Redirect if not logged in
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-  header("Location: ../index.php");
-  exit();
-}
-// Ensure only admin can access
-if (!isset($_SESSION['Role']) || $_SESSION['Role'] !== "Admin") {
-    header("Location: ../index.php");
+
+// 🔐 Session and Role Validation
+$role = $_SESSION['role'] ?? null;
+$userID = $_SESSION['user_id'] ?? null;
+
+if (!$role || $role !== 'Admin' || !$userID) {
+    session_unset();
+    session_destroy();
+    header("Refresh:3; url=../index.php");
+    echo "<p style='text-align:center; color:red; font-weight:bold;'>⚠️ Unauthorized access. Redirecting to login...</p>";
     exit;
 }
 // =========================
