@@ -492,67 +492,63 @@ if ($result && $result->num_rows > 0) {
       <h2>Add Employee</h2>
       <form id="addForm" method="POST" action="employee-add.php">
 
-        <label>First Name:</label>
-        <input type="text" name="FirstName" required />
+<label>First Name:</label>
+<input type="text" name="FirstName" required />
 
-        <label>Last Name:</label>
-        <input type="text" name="LastName" required />
+<label>Last Name:</label>
+<input type="text" name="LastName" required />
 
-        <label>Position:</label>
-        <input type="text" name="Position" required />
+<label>Position:</label>
+<input type="text" name="Position" required />
 
-        <label>NFC Card:</label>
-        <select name="NfcCardID">
-          <option value="">No Card</option>
-          <?php
-          // Fetch available NFC cards
-          $cardsSql = "SELECT NfcCardID, CardUID FROM nfc_card WHERE IsActive = 1";
-          $cardsResult = $conn->query($cardsSql);
-          if ($cardsResult && $cardsResult->num_rows > 0) {
-            while ($card = $cardsResult->fetch_assoc()) {
-              echo '<option value="' . htmlspecialchars($card['NfcCardID']) . '">'
-                . htmlspecialchars($card['CardUID']) . '</option>';
-            }
-          }
-          ?>
-        </select>
+<label>NFC Card:</label>
+<select name="NfcCardID">
+  <option value="">No Card</option>
+  <?php
+    $cardsSql = "SELECT NfcCardID, CardUID FROM nfc_card WHERE IsActive = 1";
+    $cardsResult = $conn->query($cardsSql);
+    if ($cardsResult && $cardsResult->num_rows > 0) {
+      while ($card = $cardsResult->fetch_assoc()) {
+        echo '<option value="' . htmlspecialchars($card['NfcCardID']) . '">'
+          . htmlspecialchars($card['CardUID']) . '</option>';
+      }
+    }
+  ?>
+</select>
 
-        <label>Status:</label>
-        <select name="Status" required>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+<label>Status:</label>
+<select name="Status" required>
+  <option value="Active">Active</option>
+  <option value="Inactive">Inactive</option>
+</select>
 
-        <label>Contact Info:</label>
-        <input type="text" name="ContactInfo" />
+<label>Contact Info:</label>
+<input type="text" name="ContactInfo" />
 
-        <label>Date Hired:</label>
-        <input type="date" name="DateHired" required />
-        <label>Username:</label>
-        <input type="text" name="Username" required />
+<label>Date Hired:</label>
+<input type="date" name="DateHired" max="<?php echo date('Y-m-d'); ?>" required />
 
-        <label>Password:</label>
-        <input type="text" name="Password" required />
+<label>Username:</label>
+<input type="text" name="Username" required />
 
-        <label>Role:</label>
-        <select name="Role" required>
-          <option value="Admin">Admin</option>
-          <option value="Owner">Owner</option>
-          <option value="Employee" selected>Employee</option>
-        </select>
+<label>Password:</label>
+<input type="password" name="Password" required />
 
+<label>Role:</label>
+<select name="Role" required>
+  <option value="Admin">Admin</option>
+  <option value="Owner">Owner</option>
+  <option value="Employee" selected>Employee</option>
+</select>
 
-        <div class="modal-actions">
-          <button type="submit" class="btn-save">💾 Add Employee</button>
-         
-          <div class="form-group">
+<div class="modal-actions">
+  <button type="submit" class="btn-save">💾 Add Employee</button>
+  <div class="form-group">
+    <button type="button" onclick="openAddCardModal()">+ Add New Card</button>
+  </div>
+</div>
+</form>
 
-            <button type="button" onclick="openAddCardModal()">+ Add New Card</button>
-          </div>
-
-        </div>
-
-      </form>
       <div id="addCardModal" class="modal">
         <div class="modal-content">
           <span class="close-btn" onclick="closeModal('addCardModal')">&times;</span>
