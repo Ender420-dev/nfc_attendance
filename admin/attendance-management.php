@@ -13,14 +13,30 @@ if (!$role || $role !== 'Admin' || !$userID) {
     echo "<p style='text-align:center; color:red; font-weight:bold;'>⚠️ Unauthorized access. Redirecting to login...</p>";
     exit;
 }
-// Fetch attendance + employee info
-$sql = "SELECT a.AttendanceID, a.ScanTime, a.ScanType, a.Remarks,
-        e.FirstName, e.LastName
-        FROM attendance a
-        JOIN employees e ON a.EmployeeID = e.EmployeeID
-        ORDER BY a.ScanTime DESC";
 
-$result = $conn->query($sql);
+// 🧭 Get date filter from query string
+$filterDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+
+// 🧩 Query attendance with join on employees
+$sql = "
+  SELECT 
+    a.AttendanceID, 
+    e.FirstName, 
+    e.LastName, 
+    a.ScanType, 
+    a.IsLate, 
+    a.WorkDate, 
+    a.ScanTime, 
+    a.Remarks
+  FROM attendance a
+  LEFT JOIN employees e ON a.EmployeeID = e.EmployeeID
+  WHERE DATE(a.WorkDate) = ?
+  ORDER BY a.ScanTime DESC
+";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $filterDate);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,6 +44,16 @@ $result = $conn->query($sql);
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Attendance Management</title>
+<style>
+    .green { color: green; font-weight: bold; }
+    .yellow { color: goldenrod; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 8px 10px; border: 1px solid #ccc; text-align: center; }
+    th { background-color: #f5f5f5; }
+    .filter-box { margin-bottom: 15px; }
+    .filter-box input[type="date"] { padding: 5px 8px; }
+    .filter-box button { padding: 6px 10px; }
+  </style>
 <link rel="stylesheet" href="../css/admin.css?v=1.4"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="icon" type="image/png" href="../images/logo.png"/>
@@ -88,7 +114,15 @@ $result = $conn->query($sql);
   <div class="search-filter-container">
     <input type="text" id="searchInput" class="search" placeholder="Search employees..."/>
   </div>
-
+ <!-- 🔍 Filter by date -->
+ <div class="filter-box">
+    <form method="GET" action="">
+      <label for="date">Filter by Date:</label>
+      <input type="date" id="date" name="date" value="<?= htmlspecialchars($filterDate); ?>" max="<?= date('Y-m-d'); ?>" required>
+      <button type="submit">Filter</button>
+      <a href="admin-attendance.php"><button type="button">Show All</button></a>
+    </form>
+  </div>
   <div class="table">
   <h2>Employee Attendance Records</h2>
   <table id="Table" class="spread-table">
@@ -96,6 +130,7 @@ $result = $conn->query($sql);
       <tr>
         <th>Full Name</th>
         <th>Scan Type</th>
+        <th>Work Date</th>
         <th>Scan Time</th>
         <th>Status</th>
         <th>Remarks</th>
@@ -104,7 +139,7 @@ $result = $conn->query($sql);
     </thead>
     <tbody id="attendanceTableBody">
       <?php if ($result && $result->num_rows > 0): ?>
-        <?php while($row = $result->fetch_assoc()): ?>
+        <?php while ($row = $result->fetch_assoc()): ?>
           <?php
             $statusClass = !empty($row['IsLate']) ? 'yellow' : 'green';
             $statusText = !empty($row['IsLate']) ? 'Late' : 'On Time';
@@ -112,20 +147,20 @@ $result = $conn->query($sql);
           <tr data-id="<?= $row['AttendanceID']; ?>">
             <td><?= htmlspecialchars($row['FirstName'] . " " . $row['LastName']); ?></td>
             <td><?= htmlspecialchars($row['ScanType']); ?></td>
-            <td><?= !empty($row['ScanTime']) ? date("Y-m-d H:i:s", strtotime($row['ScanTime'])) : '—'; ?></td>
-            <td class="status <?= $statusClass; ?>"><?= $statusText; ?></td>
+            <td><?= htmlspecialchars($row['WorkDate']); ?></td>
+            <td><?= htmlspecialchars($row['ScanTime']); ?></td>
+            <td class="<?= $statusClass; ?>"><?= $statusText; ?></td>
             <td><?= !empty($row['Remarks']) ? htmlspecialchars($row['Remarks']) : '—'; ?></td>
             <td>
-  <button class="view" onclick="openViewModal(<?= $row['AttendanceID']; ?>)">View</button>
-  <button class="edit" onclick="openEditModal(<?= $row['AttendanceID']; ?>)">Edit</button>
-  <button class="delete" onclick="openDeleteModal(<?= $row['AttendanceID']; ?>)">Remove</button>
-</td>
-
+              <button class="view" onclick="openViewModal(<?= $row['AttendanceID']; ?>)">View</button>
+              <button class="edit" onclick="openEditModal(<?= $row['AttendanceID']; ?>)">Edit</button>
+              <button class="delete" onclick="openDeleteModal(<?= $row['AttendanceID']; ?>)">Remove</button>
+            </td>
           </tr>
         <?php endwhile; ?>
       <?php else: ?>
         <tr>
-          <td colspan="6" style="text-align:center;color:gray;">No records found.</td>
+          <td colspan="7" style="text-align:center;color:gray;">No attendance records found for this date.</td>
         </tr>
       <?php endif; ?>
     </tbody>

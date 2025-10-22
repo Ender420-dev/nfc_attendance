@@ -1,22 +1,39 @@
 <?php
-session_start();
 include '../db.php';
+header('Content-Type: application/json');
 
-$sql = "SELECT a.AttendanceID, a.ScanTime, a.ScanType, a.Remarks,
-               e.FirstName, e.LastName
-        FROM attendance a
-        JOIN employees e ON a.EmployeeID = e.EmployeeID
-        ORDER BY a.ScanTime DESC";
+$date = $_GET['date'] ?? date('Y-m-d');
 
-$result = $conn->query($sql);
-$data = [];
+// ✅ Adjusted query to fit standard column names
+$sql = "
+  SELECT 
+    a.AttendanceID,
+    e.FirstName,
+    e.LastName,
+    a.ScanType,
+    TIME_FORMAT(a.ScanTime, '%H:%i:%s') AS ScanTime,
+    a.IsLate,
+    a.Remarks
+  FROM attendance a
+  LEFT JOIN employee e ON a.EmployeeID = e.EmployeeID
+  WHERE DATE(a.WorkDate) = ?
+  ORDER BY a.AttendanceID DESC
+";
 
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $data[] = $row;
-  }
+$stmt = $conn->prepare($sql);
+if (!$stmt) {
+    echo json_encode(["error" => "SQL Prepare Failed: " . $conn->error]);
+    exit;
 }
 
-header('Content-Type: application/json');
-echo json_encode($data);
+$stmt->bind_param("s", $date);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$data = [];
+while ($row = $result->fetch_assoc()) {
+    $data[] = $row;
+}
+
+echo json_encode($data ?: []);
 ?>

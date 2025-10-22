@@ -527,6 +527,8 @@ if ($result && $result->num_rows > 0) {
 
 <label>Date Hired:</label>
 <input type="date" name="DateHired" max="<?php echo date('Y-m-d'); ?>" required />
+<label>Email:</label>
+                  <input type="email" name="email" id="email" required />
 
 <label>Username:</label>
 <input type="text" name="Username" required />
