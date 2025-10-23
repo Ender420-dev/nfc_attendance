@@ -92,9 +92,7 @@ $summaryQuery = $conn->query("
         <button class="btn-generate" onclick="openPayrollModal()">
           <i class="fa-solid fa-plus"></i> Generate Payroll
         </button>
-        <button class="btn-generate" onclick="generateThisWeek()">
-          <i class="fa-solid fa-calendar-week"></i> Generate This Week
-        </button>
+       
       </div>
 
       <!-- Payroll Generate Modal -->
