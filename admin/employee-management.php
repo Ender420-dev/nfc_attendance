@@ -441,10 +441,7 @@ if ($result && $result->num_rows > 0) {
                       <label>NFC Card ID</label>
                       <span id="viewNfcCardID"></span>
                     </div>
-                    <div class="detail-item">
-                      <label>Position ID</label>
-                      <span id="viewPositionID"></span>
-                    </div>
+                    
                     <div class="detail-item">
                       <label>First Name</label>
                       <span id="viewFirstName"></span>
@@ -692,20 +689,35 @@ if ($result && $result->num_rows > 0) {
       .catch(err => console.error(err));
   }
 
-  // 🔹 View Employee Modal
-  function openViewModal(button) {
+ // 🔹 View Employee Modal (fetches full details including Email)
+function openViewModal(button) {
     const row = button.closest('tr');
-    document.getElementById("viewEmployeeID").innerText = row.children[0].innerText;
-    document.getElementById("viewNfcCardID").innerText = row.children[1].innerText;
-    document.getElementById("viewFirstName").innerText = row.children[2].innerText;
-    document.getElementById("viewLastName").innerText = row.children[3].innerText;
-    document.getElementById("viewPosition").innerText = row.children[4].innerText;
-    document.getElementById("viewContactInfo").innerText = row.children[5].innerText;
-    document.getElementById("viewStatus").innerText = row.children[6].innerText;
-    document.getElementById("viewDateHired").innerText = row.children[7].innerText;
+    const employeeId = row.getAttribute("data-id"); // Get EmployeeID from row
 
-    openModal("viewModal");
-  }
+    fetch("get_employee_details.php?id=" + employeeId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Fill modal fields
+            document.getElementById("viewEmployeeID").innerText = data.EmployeeID || "";
+            document.getElementById("viewNfcCardID").innerText = data.NfcCardID || "No Card";
+            document.getElementById("viewFirstName").innerText = data.FirstName || "";
+            document.getElementById("viewLastName").innerText = data.LastName || "";
+            document.getElementById("viewPosition").innerText = data.Position || "";
+            document.getElementById("viewContactInfo").innerText = data.ContactInfo || "";
+            document.getElementById("viewEmail").innerText = data.email || ""; // ✅ Correctly set Email
+            document.getElementById("viewStatus").innerText = data.Status || "";
+            document.getElementById("viewDateHired").innerText = data.DateHired || "";
+
+            openModal("viewModal");
+        })
+        .catch(err => console.error("Error fetching employee details:", err));
+}
+
 
   // 🔹 Edit Employee Modal
   function openEditModal(employeeId) {
