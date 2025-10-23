@@ -224,6 +224,78 @@ if ($result && $result->num_rows > 0) {
     background-color: #45a049;
     /* Darker green */
   }
+  /* 📱 Responsive Table Wrapper */
+.table {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
+  background: #fff;
+  border-radius: 8px;
+}
+
+/* Keep table readable on small screens */
+.spread-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px; /* Prevents column squishing too much */
+}
+
+.spread-table th,
+.spread-table td {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Table heading style */
+.spread-table thead th {
+  background-color: #1e3261;
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Alternate row coloring */
+.spread-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* 🪟 Scrollable table container for mobile */
+@media (max-width: 768px) {
+  .table {
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .spread-table {
+    min-width: 700px; /* keep columns visible */
+  }
+
+  .spread-table th, .spread-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .search-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-filter-container input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .search-filter-container .add {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 </style>
 
 <body class="dashboard-page">
@@ -314,7 +386,6 @@ if ($result && $result->num_rows > 0) {
                 <td><?= htmlspecialchars($emp['FirstName']) ?></td>
                 <td><?= htmlspecialchars($emp['LastName']) ?></td>
                 <td><?= htmlspecialchars($emp['Position']) ?></td>
-                <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
                  <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
                 <td><?= htmlspecialchars($emp['Status']) ?></td>
                 <td><?= htmlspecialchars($emp['DateHired']) ?></td>
