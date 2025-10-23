@@ -332,6 +332,8 @@ if ($result && $result->num_rows > 0) {
             <i class="fa-solid fa-money-bill"></i> Payroll Management
           </a>
         </li>
+        <li><a href="appointment-management.php" class="menu-link "><i class="fa-solid fa-calendar-check"></i> Appointment Management</a></li>
+
         <li>
           <a href="../index.php" class="menu-link">
             <i class="fa-solid fa-right-from-bracket"></i> Logout

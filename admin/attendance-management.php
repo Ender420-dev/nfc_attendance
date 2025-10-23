@@ -92,6 +92,11 @@ $result = $stmt->get_result();
           </a>
         </li>
         <li>
+          <a href="appointment-management.php" class="menu-link">
+            <i class="fa-solid fa-money-bill"></i> Appointment Management
+          </a>
+        </li>
+        <li>
           <a href="../index.php" class="menu-link">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
           </a>
