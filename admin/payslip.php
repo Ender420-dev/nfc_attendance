@@ -115,7 +115,7 @@ if (isset($_GET['id'])) {
       <p><strong>Position:</strong> <?= htmlspecialchars($result['Position']) ?></p>
       <p><strong>Pay Period:</strong> <?= htmlspecialchars($result['PayPeriod']) ?></p>
       <p><strong>Days Worked:</strong> <?= $daysWorked ?></p>
-      <p><strong>Total Hours:</strong> <?= number_format($totalHours, 2) ?> hrs</p>
+      <!-- <p><strong>Total Hours:</strong> <?= number_format($totalHours, 2) ?> hrs</p> -->
       <p><strong>Gross Pay:</strong> ₱<?= number_format($result['GrossPay'], 2) ?></p>
       <p><strong>Deductions:</strong> ₱<?= number_format($result['Deduction'], 2) ?></p>
       <p><strong>Net Pay:</strong> ₱<?= number_format($result['NetPay'], 2) ?></p>
