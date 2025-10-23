@@ -44,26 +44,49 @@ if (!$empRes || $empRes->num_rows === 0) {
 $emp = $empRes->fetch_assoc();
 $stmt->close();
 
-// ✅ Fetch payroll total for this month
+/// Calculate total earnings for this employee for the current month
 $stmt = $conn->prepare("
-    SELECT COALESCE(SUM(NetPay),0) AS totalEarnings
-    FROM payroll
-    WHERE EmployeeID = ?
-      AND MONTH(ProcessedDate) = MONTH(CURDATE())
-      AND YEAR(ProcessedDate) = YEAR(CURDATE())
+SELECT COALESCE(SUM(NetPay), 0) AS totalEarnings
+FROM payroll
+WHERE EmployeeID = ?
+  AND MONTH(ProcessedDate) = MONTH(CURDATE())
+  AND YEAR(ProcessedDate) = YEAR(CURDATE())
 ");
 $stmt->bind_param("i", $employeeId);
 $stmt->execute();
-$payRes = $stmt->get_result();
-$pay = $payRes->fetch_assoc();
+$res = $stmt->get_result();
+$totalEarnings = 0;
+if ($res && $res->num_rows > 0) {
+$row = $res->fetch_assoc();
+$totalEarnings = floatval($row['totalEarnings']);
+}
 $stmt->close();
+
+
 
 $shiftStart = !empty($emp['ShiftStart']) ? date("g:i A", strtotime($emp['ShiftStart'])) : 'N/A';
 $shiftEnd   = !empty($emp['ShiftEnd']) ? date("g:i A", strtotime($emp['ShiftEnd']))   : 'N/A';
 
 // Example data
-$appointmentsToday = 8;
-$totalClients = 128;
+$today = date('Y-m-d');
+$stmt = $conn->prepare("SELECT COUNT(*) AS totalTodayAppointments 
+                        FROM appointment 
+                        WHERE EmployeeID = ? AND dateAppointment = ?");
+$stmt->bind_param("is", $employeeId, $today);
+$stmt->execute();
+$res = $stmt->get_result();
+$appointmentsToday = $res->fetch_assoc()['totalTodayAppointments'] ?? 0;
+$stmt->close();
+$stmt = $conn->prepare("
+    SELECT COUNT(DISTINCT clientName) AS totalClients
+    FROM appointment
+    WHERE EmployeeID = ?
+");
+$stmt->bind_param("i", $employeeId);
+$stmt->execute();
+$res = $stmt->get_result();
+$totalClients = $res->fetch_assoc()['totalClients'] ?? 0;
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -118,20 +141,13 @@ $totalClients = 128;
       <div class="stat-icon"><i class="fas fa-calendar"></i></div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-info">
-        <h3>Current Shift</h3>
-        <p><?= htmlspecialchars($shiftStart . " - " . $shiftEnd) ?></p>
-        <h4 style="font-weight:600;color:#888">Enjoy your shift!</h4>
-      </div>
-      <div class="stat-icon"><i class="fas fa-clock"></i></div>
-    </div>
+    
 
     <div class="stat-card">
       <div class="stat-info">
         <h3>This Month's Earnings</h3>
         <p>₱<?= number_format($pay['totalEarnings'] ?? 0, 2) ?></p>
-        <h4 style="font-weight:600;color:#888">15% service commission</h4>
+        <h4 style="font-weight:600;color:#888">40% service commission</h4>
       </div>
       <div class="stat-icon"><i class="fas fa-sack-dollar"></i></div>
     </div>
@@ -140,7 +156,7 @@ $totalClients = 128;
       <div class="stat-info">
         <h3>Total Clients</h3>
         <p><?= htmlspecialchars($totalClients) ?></p>
-        <h4 style="font-weight:600;color:#888">12 new this month</h4>
+        <h4 style="font-weight:600;color:#888"></h4>
       </div>
       <div class="stat-icon"><i class="fas fa-users"></i></div>
     </div>
@@ -151,7 +167,6 @@ $totalClients = 128;
     <div class="appointments-card">
   <div class="appointments-header">
     <h3>Today's Appointments</h3>
-    <a href="employee-appointments.php" class="view-all">View All</a>
   </div>
 
   <?php
@@ -196,7 +211,6 @@ $totalClients = 128;
   $apptStmt->close();
   ?>
 
-  <button class="add-btn" onclick="window.location.href='employee-add-appointment.php'">Add New Appointment</button>
 </div>
 
 
