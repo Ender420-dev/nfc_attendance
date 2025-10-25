@@ -7,7 +7,7 @@ $employeeID = $_SESSION['EmployeeID'];
 $sql = "SELECT AttendanceID, WorkDate, ScanType, ScanTime, IsLate, Remarks
         FROM attendance
         WHERE EmployeeID = ?
-        ORDER BY ScanTime DESC
+        ORDER BY WorkDate DESC
         LIMIT 10";
 
 $stmt = $conn->prepare($sql);

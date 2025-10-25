@@ -69,6 +69,8 @@ $summaryQuery = $conn->query("
         <li><a href="admin-attendance.php" class="menu-link"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
         <li><a href="attendance-management.php" class="menu-link"><i class="fa-solid fa-clipboard-list"></i> Attendance Management</a></li>
         <li><a href="payroll-management.php" class="menu-link active"><i class="fa-solid fa-money-bill"></i> Payroll Management</a></li>
+        <li><a href="appointment-management.php" class="menu-link"><i class="fa-solid fa-calendar-check"></i> Appointment Management</a></li>
+
         <li><a href="../index.php" class="menu-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
       </ul>
     </nav>
@@ -92,9 +94,7 @@ $summaryQuery = $conn->query("
         <button class="btn-generate" onclick="openPayrollModal()">
           <i class="fa-solid fa-plus"></i> Generate Payroll
         </button>
-        <button class="btn-generate" onclick="generateThisWeek()">
-          <i class="fa-solid fa-calendar-week"></i> Generate This Week
-        </button>
+       
       </div>
 
       <!-- Payroll Generate Modal -->

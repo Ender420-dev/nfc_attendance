@@ -20,33 +20,49 @@ $totalEmployees = 0;
 $presentEmployees = 0;
 $leaveEmployees = 0;
 
+// Total employees
 $sql = "SELECT COUNT(*) as total FROM employees";
 $result = $conn->query($sql);
 if ($result && $row = $result->fetch_assoc()) $totalEmployees = $row['total'];
 
-$sql = "SELECT COUNT(*) as present FROM employees WHERE Status = 'Present'";
-$result = $conn->query($sql);
-if ($result && $row = $result->fetch_assoc()) $presentEmployees = $row['present'];
+// Today's date
+$today = date('Y-m-d');
 
+// Employees who timed IN today (all entries)
+$presentList = [];
+
+$sql = "SELECT a.EmployeeID, e.FirstName, e.LastName, a.ScanTime
+        FROM attendance a
+        JOIN employees e ON a.EmployeeID = e.EmployeeID
+        WHERE a.WorkDate = ? AND a.ScanType = 'IN'
+        ORDER BY a.ScanTime ASC";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $today);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$presentEmployees = 0; // initialize count
+
+if ($result && $result->num_rows > 0) {
+    $presentEmployees = $result->num_rows; // count all IN scans
+    while ($row = $result->fetch_assoc()) {
+        $presentList[] = $row; // store all scans for display
+    }
+}
+
+
+// Employees on leave
 $sql = "SELECT COUNT(*) as onLeave FROM employees WHERE Status = 'Leave'";
 $result = $conn->query($sql);
 if ($result && $row = $result->fetch_assoc()) $leaveEmployees = $row['onLeave'];
+
 
 // =========================
 // TODAY'S APPOINTMENTS
 // Use DATE(...) in case dateAppointment is DATETIME
 // =========================
-$today = date('Y-m-d');
-$appointments = [];
-$sql = "SELECT a.*, e.FirstName, e.LastName 
-        FROM appointment a 
-        LEFT JOIN employees e ON a.EmployeeID = e.EmployeeID 
-        WHERE DATE(a.dateAppointment) = '$today' 
-        ORDER BY a.Time ASC";
-$result = $conn->query($sql);
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) $appointments[] = $row;
-}
+
 
 // =========================
 // EMPLOYEE LIST
@@ -120,8 +136,11 @@ if ($result && $result->num_rows > 0) {
         <li><a href="admin-dashboard.php" class="menu-link active"><i class="fa fa-home"></i> Dashboard</a></li>
         <li><a href="employee-management.php" class="menu-link"><i class="fa-solid fa-users"></i> Employee Management</a></li>
         <li><a href="admin-attendance.php" class="menu-link"><i class="fa-solid fa-calendar"></i> Attendance</a></li>
+        
         <li><a href="attendance-management.php" class="menu-link"><i class="fa-solid fa-clipboard-list"></i> Attendance Management</a></li>
         <li><a href="payroll-management.php" class="menu-link"><i class="fa-solid fa-money-bill"></i> Payroll Management</a></li>
+        <li><a href="appointment-management.php" class="menu-link "><i class="fa-solid fa-calendar-check"></i> Appointment Management</a></li>
+
         <li><a href="../index.php" class="menu-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
       </ul>
     </nav>
@@ -154,8 +173,21 @@ if ($result && $result->num_rows > 0) {
     <div class="dashboard">
       <div class="stats">
         <div class="stat-card"><div class="stat-info"><h3>Total Employees</h3><h2><?php echo $totalEmployees; ?></h2></div><div class="stat-icon"><i class="fas fa-users"></i></div></div>
-        <div class="stat-card"><div class="stat-info"><h3>Present</h3><h2><?php echo $presentEmployees; ?></h2></div><div class="stat-icon"><i class="fas fa-user-check"></i></div></div>
-        <div class="stat-card"><div class="stat-info"><h3>On Leave</h3><h2><?php echo $leaveEmployees; ?></h2></div><div class="stat-icon"><i class="fas fa-user-clock"></i></div></div>
+        <div class="stat-card">
+        <div class="stat-info">
+    <h3>Present Today</h3>
+    <h2><?php echo $presentEmployees; ?></h2>
+    <?php if (!empty($presentList)): ?>
+      <small>
+        <?php foreach ($presentList as $p): ?>
+          <?php echo htmlspecialchars($p['FirstName'].' '.$p['LastName']).' ('.date('g:i A', strtotime($p['ScanTime'])).')'; ?><br>
+        <?php endforeach; ?>
+      </small>
+    <?php endif; ?>
+</div>
+
+  <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+</div>
       </div>
     </div>
 

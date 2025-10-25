@@ -224,6 +224,78 @@ if ($result && $result->num_rows > 0) {
     background-color: #45a049;
     /* Darker green */
   }
+  /* 📱 Responsive Table Wrapper */
+.table {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth scroll for iOS */
+  background: #fff;
+  border-radius: 8px;
+}
+
+/* Keep table readable on small screens */
+.spread-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px; /* Prevents column squishing too much */
+}
+
+.spread-table th,
+.spread-table td {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Table heading style */
+.spread-table thead th {
+  background-color: #1e3261;
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Alternate row coloring */
+.spread-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* 🪟 Scrollable table container for mobile */
+@media (max-width: 768px) {
+  .table {
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .spread-table {
+    min-width: 700px; /* keep columns visible */
+  }
+
+  .spread-table th, .spread-table td {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  .search-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-filter-container input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .search-filter-container .add {
+    width: 100%;
+    text-align: center;
+  }
+}
+
 </style>
 
 <body class="dashboard-page">
@@ -260,6 +332,8 @@ if ($result && $result->num_rows > 0) {
             <i class="fa-solid fa-money-bill"></i> Payroll Management
           </a>
         </li>
+        <li><a href="appointment-management.php" class="menu-link "><i class="fa-solid fa-calendar-check"></i> Appointment Management</a></li>
+
         <li>
           <a href="../index.php" class="menu-link">
             <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -314,7 +388,6 @@ if ($result && $result->num_rows > 0) {
                 <td><?= htmlspecialchars($emp['FirstName']) ?></td>
                 <td><?= htmlspecialchars($emp['LastName']) ?></td>
                 <td><?= htmlspecialchars($emp['Position']) ?></td>
-                <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
                  <td><?= htmlspecialchars($emp['ContactInfo']) ?></td>
                 <td><?= htmlspecialchars($emp['Status']) ?></td>
                 <td><?= htmlspecialchars($emp['DateHired']) ?></td>
@@ -368,10 +441,7 @@ if ($result && $result->num_rows > 0) {
                       <label>NFC Card ID</label>
                       <span id="viewNfcCardID"></span>
                     </div>
-                    <div class="detail-item">
-                      <label>Position ID</label>
-                      <span id="viewPositionID"></span>
-                    </div>
+                    
                     <div class="detail-item">
                       <label>First Name</label>
                       <span id="viewFirstName"></span>
@@ -619,20 +689,35 @@ if ($result && $result->num_rows > 0) {
       .catch(err => console.error(err));
   }
 
-  // 🔹 View Employee Modal
-  function openViewModal(button) {
+ // 🔹 View Employee Modal (fetches full details including Email)
+function openViewModal(button) {
     const row = button.closest('tr');
-    document.getElementById("viewEmployeeID").innerText = row.children[0].innerText;
-    document.getElementById("viewNfcCardID").innerText = row.children[1].innerText;
-    document.getElementById("viewFirstName").innerText = row.children[2].innerText;
-    document.getElementById("viewLastName").innerText = row.children[3].innerText;
-    document.getElementById("viewPosition").innerText = row.children[4].innerText;
-    document.getElementById("viewContactInfo").innerText = row.children[5].innerText;
-    document.getElementById("viewStatus").innerText = row.children[6].innerText;
-    document.getElementById("viewDateHired").innerText = row.children[7].innerText;
+    const employeeId = row.getAttribute("data-id"); // Get EmployeeID from row
 
-    openModal("viewModal");
-  }
+    fetch("get_employee_details.php?id=" + employeeId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Fill modal fields
+            document.getElementById("viewEmployeeID").innerText = data.EmployeeID || "";
+            document.getElementById("viewNfcCardID").innerText = data.NfcCardID || "No Card";
+            document.getElementById("viewFirstName").innerText = data.FirstName || "";
+            document.getElementById("viewLastName").innerText = data.LastName || "";
+            document.getElementById("viewPosition").innerText = data.Position || "";
+            document.getElementById("viewContactInfo").innerText = data.ContactInfo || "";
+            document.getElementById("viewEmail").innerText = data.email || ""; // ✅ Correctly set Email
+            document.getElementById("viewStatus").innerText = data.Status || "";
+            document.getElementById("viewDateHired").innerText = data.DateHired || "";
+
+            openModal("viewModal");
+        })
+        .catch(err => console.error("Error fetching employee details:", err));
+}
+
 
   // 🔹 Edit Employee Modal
   function openEditModal(employeeId) {
